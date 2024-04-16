@@ -716,10 +716,8 @@ class WebGLRipperWrapper {
 
 		const saveBuffer = gl.createBuffer();
 
-
 		let width = self._GLViewport.width;  // Breite des Viewports
 		let height = self._GLViewport.height; // Höhe des Viewports
-
 
 		pixelContainerConvert = new Uint8Array(width * height * 4);
 		pixelContainer = new Uint8Array(pixelContainerConvert.length / 4);   // RGBA für jedes Pixel
@@ -774,6 +772,12 @@ class WebGLRipperWrapper {
 
 		self.HelperFunc_UpdateAllAttributes(self, gl);
 
+		console.log("TEST inside draw Elements: ");
+
+		// Make sure, correct Framebuffer is bound
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		console.log("ARRAYS")
 
 		//console.log("Finale Pixel drawArrays: " + pixelContainer);
 
@@ -851,7 +855,58 @@ class WebGLRipperWrapper {
 
 		self.HelperFunc_UpdateAllAttributes(self, gl);
 
+		/*console.log("ELEMENTS")
+
 		//console.log("Finale Pixel drawElements: " + pixelContainer);
+
+		console.log("TEST inside draw Elements: ");
+
+		// create to render to
+		const targetTextureWidth = 256;
+		const targetTextureHeight = 256;
+		const targetTexture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+
+			// define size and format of level 0
+			const level = 0;
+			const internalFormat = gl.RGBA;
+			const border = 0;
+			const format = gl.RGBA;
+			const type = gl.UNSIGNED_BYTE;
+			const data = null;
+			gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+				targetTextureWidth, targetTextureHeight, border,
+				format, type, data);
+
+			// set the filtering so we don't need mips
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		console.log("VORHER Daten: " + data);
+
+		const fb = gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+		const attachmentPoint = gl.COLOR_ATTACHMENT0;
+		gl.framebufferTexture2D(
+			gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
+
+		let canRead = (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE);
+
+		console.log("PRÜFE: " + canRead);
+
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		console.log("AFTER")
+
+
+
+		console.log("NACHHER Daten: " + data);*/
+
+
 
 		if(self._GLCurrentVertices.length <= 0) {
 			LogToParent("Got no vertices in drawElements call");
@@ -964,7 +1019,7 @@ class WebGLRipperWrapper {
 	}
 
 	hooked_bindFramebuffer(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer
-		console.log("Hooked Framebuffer")
+		// TODO Here hook into framebuffers during creation / binding
 	}
 
 	hooked_bufferData(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData
@@ -1131,7 +1186,8 @@ function readFramebufferPixels(gl) {
 	let pixels = new Uint8Array(width * height * 4); // RGBA
 
 	// Make sure, correct Framebuffer is bound
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	//gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	console.log("Maße: " + width + ", " + height);
 
 	// Read Pixel-values from Framebuffer
 	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
