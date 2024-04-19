@@ -1,5 +1,5 @@
 const OBJUtils = {
-	DrawModes: {
+	/*DrawModes: {
 		"POINTS": 0,
 		"LINES": 1,
 		"LINE_STRIP": 2,
@@ -9,7 +9,7 @@ const OBJUtils = {
 		"TRIANGE_FAN": 6
 	},
 
-	/* Used to store a texture for use in OBJModel */
+	/!* Used to store a texture for use in OBJModel *!/
 	OBJTexture: class {
 		constructor(filename, url, type = "map_Kdc") {
 			this._URL = url;
@@ -37,7 +37,7 @@ const OBJUtils = {
 		}
 	},
 
-	/* Used to store color info about the primitive */
+	/!* Used to store color info about the primitive *!/
 	OBJColTexture: class {
 		constructor(filename, color) {
 			this._COLOR = color;
@@ -49,7 +49,7 @@ const OBJUtils = {
 		}
 	},
 
-	/* Used to store indices and how to draw them */
+	/!* Used to store indices and how to draw them *!/
 	OBJPrimitive: class {
 		constructor(mode, indices) {
 			this._MODE = mode;
@@ -57,7 +57,7 @@ const OBJUtils = {
 		}
 	},
 
-	/* OBJ Creation */
+	/!* OBJ Creation *!/
 	OBJModel: class {
 		 Primitives = [] // Array of OBJPrimitive's
 		 Vertices = [] // Array of Vertices
@@ -154,11 +154,11 @@ const OBJUtils = {
 			});
 			return mtl;
 		}
-	}
+	}*/
 } // OBJ File Namespace
 
 class Downloader {
-	static async DownloadImage(filename, url) {
+	/*static async DownloadImage(filename, url) {
 		const a = document.createElement("a");
 		a.href = await this.toDataURL(url);
 		a.download = filename;
@@ -194,7 +194,7 @@ class Downloader {
 		}).then(blob => {
 			return URL.createObjectURL(blob);
 		});
-	}
+	}*/
 } // Downloader Class
 
 let _window = window;
@@ -226,9 +226,9 @@ _window.MODELS = [];
 
 document.addEventListener('keydown', function (event) {
 	if (event.keyCode == _window.WEBGLRipperSettings.CaptureSceneKeyCode && !event.shiftKey) {
-		LogToParent("Starting capturing...");
+		/*LogToParent("Starting capturing...");
 
-			LogToParent("Started capture on: ", _window.RIPPERS[ 0 ]);
+			LogToParent("Started capture on: ", _window.RIPPERS[ 0 ]);*/
 			// TODO Functionality, that recording ist getting turned on and off, each time, when pressing the insert button
 			if (_window.WEBGLRipperSettings.counter === 0) {
 				_window.RIPPERS[ 0 ]._StartCapturing = true;
@@ -256,19 +256,19 @@ document.addEventListener('keydown', function (event) {
 });
 
 function resizeArrayBuffer(originalBuffer, newByteSize) {
-	if(originalBuffer.byteLength > newByteSize){
+	/*if(originalBuffer.byteLength > newByteSize){
 		throw new Error("Can't resize to a smaller array");
 	}
 	const resizedBuffer = new ArrayBuffer(newByteSize);
 	const originalView = new Uint8Array(originalBuffer);
 	const resizedView = new Uint8Array(resizedBuffer);
 	resizedView.set(originalView);
-	return resizedBuffer;
+	return resizedBuffer;*/
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
 function multiplyMatrixAndPoint(matrix, point) {
-	let c0r0 = matrix[0], c1r0 = matrix[1], c2r0 = matrix[2], c3r0 = matrix[3];
+	/*let c0r0 = matrix[0], c1r0 = matrix[1], c2r0 = matrix[2], c3r0 = matrix[3];
 	let c0r1 = matrix[4], c1r1 = matrix[5], c2r1 = matrix[6], c3r1 = matrix[7];
 	let c0r2 = matrix[8], c1r2 = matrix[9], c2r2 = matrix[10], c3r2 = matrix[11];
 	let c0r3 = matrix[12], c1r3 = matrix[13], c2r3 = matrix[14], c3r3 = matrix[15];
@@ -281,7 +281,7 @@ function multiplyMatrixAndPoint(matrix, point) {
 	let resultX = x * c0r0 + y * c0r1 + z * c0r2 + w * c0r3;
 	let resultY = x * c1r0 + y * c1r1 + z * c1r2 + w * c1r3;
 	let resultZ = x * c2r0 + y * c2r1 + z * c2r2 + w * c2r3;
-	return [resultX, resultY, resultZ];
+	return [resultX, resultY, resultZ];*/
 }
 
 class WebGLRipperWrapper {
@@ -324,7 +324,7 @@ class WebGLRipperWrapper {
 		this._GLContext = gl;
 	}
 
-	HelperFunc_GetDataURIFromWebGLTexture(gl, webglTexture, texWidth, texHeight, flip = true) {
+	/*HelperFunc_GetDataURIFromWebGLTexture(gl, webglTexture, texWidth, texHeight, flip = true) {
 		let fb = gl.createFramebuffer();
 
 		// make this the current frame buffer
@@ -347,6 +347,8 @@ class WebGLRipperWrapper {
 		var pixels = new Uint8Array(texWidth * texHeight * 4);
 		// read the pixels
 		gl.readPixels(0, 0, texWidth, texHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+        console.log("ALERT, Textur wurde benutzt")
 
 		// Unbind the framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -451,7 +453,7 @@ class WebGLRipperWrapper {
 			textureMap.set(`texture${t}`,'map_Kd');
 		
 		// Normals
-		textureMap.set('normalmap',   'norm'); /* PBR rendering */
+		textureMap.set('normalmap',   'norm'); /!* PBR rendering *!/
 		
 		if(!textureMap.has(texname.toLowerCase())) {
 			LogToParent("Not a known texture type: ", texname);
@@ -459,15 +461,15 @@ class WebGLRipperWrapper {
 		}
 	
 		return textureMap.get(texname.toLowerCase());
-	}
+	}*/
 
 	HelperFunc_GetCurrentProgram(self, gl) {
 		return gl.getParameter(gl.CURRENT_PROGRAM);
 	}
 
 	/* Used for debugging */
-	HelperFunc_DownloadTextureAtLoc(self, gl, loc) {
-		/* See if a texture is bound to that slot */
+	/*HelperFunc_DownloadTextureAtLoc(self, gl, loc) {
+		/!* See if a texture is bound to that slot *!/
 		let tex = self._GLTextures.get(loc);
 
 		if (tex == undefined || !tex) {
@@ -528,19 +530,19 @@ class WebGLRipperWrapper {
 			if (texType === null)
 				return;
 
-			/* Get the sampler location of the texture */
+			/!* Get the sampler location of the texture *!/
 			var loc = gl.getUniformLocation(_CurrentProgram, uniform.name);
 
-			/* Read the location of the webgl texture slot from the sampler */
+			/!* Read the location of the webgl texture slot from the sampler *!/
 			let samplerLocation = gl.getUniform(_CurrentProgram, loc);
 
-			/* Make sure it's a texture slot */
+			/!* Make sure it's a texture slot *!/
 			if (samplerLocation < 0 || samplerLocation > 31) {
 				LogToParent("Sampler location out of bounds: ", samplerLocation);
 				return;
 			}
 
-			/* See if a texture is bound to that slot */
+			/!* See if a texture is bound to that slot *!/
 			let tex = self._GLTextures.get(samplerLocation);
 
 			if (tex == undefined || !tex) {
@@ -685,9 +687,9 @@ class WebGLRipperWrapper {
 			}
 
 		});
-	}
+	}*/
 	
-	HelperFunc_Flush(self, gl) {
+	/*HelperFunc_Flush(self, gl) {
 		self._GLCurrentUVS = [];
 		self._GLCurrentNormals = [];
 		self._GLCurrentVertices = [];
@@ -696,7 +698,7 @@ class WebGLRipperWrapper {
 	HelperFunc_ResetAll(self, gl) {
 		self._TextureCache = new Map();
 		self._ClearCount = 0;
-	}
+	}*/
 
 	hooked_viewport(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/viewport
 		let _x = args[0];
@@ -731,15 +733,9 @@ class WebGLRipperWrapper {
 
 
 		for(let i = 0; i < pixelContainerConvert.length; i += 4)pixelContainer[i / 4] = pixelContainerConvert[i];
-
-
-		// Hier könntest du die Pixelwerte nutzen, z.B. speichern oder ausgeben
-		//console.log("MEINE PIXEL: " + pixels);
-
-
 	}
 
-	hooked_linkProgram(self, gl, args, oFunc) {
+	/*hooked_linkProgram(self, gl, args, oFunc) {
 		let program = args[0];
 
 		if (!_window.WEBGLRipperSettings.isDoShaderCalc) {
@@ -748,11 +744,11 @@ class WebGLRipperWrapper {
 
 		gl.transformFeedbackVaryings(program, ["gl_Position"], gl.SEPARATE_ATTRIBS);
 		LogToParent("[ShaderCalc] Added Transform Feedback for gl_Position");
-	}
+	}*/
 
 
 	hooked_drawArrays(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays
-		if (!self._isCapturing)
+		/*if (!self._isCapturing)
 			return;
 
 		LogToParent("Captured 'drawArrays' call: ", args);
@@ -787,7 +783,7 @@ class WebGLRipperWrapper {
 		}
 		
 		if(_window.WEBGLRipperSettings.isDoShaderCalc) {
-			/* Setup Area */
+			/!* Setup Area *!/
 
 		}
 
@@ -816,19 +812,15 @@ class WebGLRipperWrapper {
 		LogToParent("Finished Building OBJ: ", builtOBJ);
 
 
-		//console.log("HIER")
-		// TODO Framebuffer-Reader Test
-		//readFramebufferPixels(gl);
-
 		// Cleanup
 		self.HelperFunc_Flush(self, gl);
 
 		if(_window.WEBGLRipperSettings.isDoShaderCalc)
-			return true;
+			return true;*/
 	}
 
 	hooked_drawElements(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements
-		if (!self._isCapturing)
+		/*if (!self._isCapturing)
 			return;
 		
 		LogToParent("Captured 'drawElements' call: ", args);
@@ -851,61 +843,114 @@ class WebGLRipperWrapper {
 		if (!oIndices || oIndices == undefined) {
 			LogToParent("No indices found in 'drawElements' call");
 			return;
-		}
-
-		self.HelperFunc_UpdateAllAttributes(self, gl);
-
-		/*console.log("ELEMENTS")
-
-		//console.log("Finale Pixel drawElements: " + pixelContainer);
-
-		console.log("TEST inside draw Elements: ");
-
-		// create to render to
-		const targetTextureWidth = 256;
-		const targetTextureHeight = 256;
-		const targetTexture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+		}*/
 
 
-			// define size and format of level 0
-			const level = 0;
-			const internalFormat = gl.RGBA;
-			const border = 0;
-			const format = gl.RGBA;
-			const type = gl.UNSIGNED_BYTE;
-			const data = null;
-			gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-				targetTextureWidth, targetTextureHeight, border,
-				format, type, data);
+		// TODO Image processing
 
-			// set the filtering so we don't need mips
+		if (_window.WEBGLRipperSettings.counter == 1) {
+
+			// Texture setup to store current content
+			var texture = gl.createTexture();
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, self._GLViewport.width, self._GLViewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-		console.log("VORHER Daten: " + data);
+			// Bind Framebuffer
+			var framebuffer = gl.createFramebuffer();
+			gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-		const fb = gl.createFramebuffer();
-		gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		const attachmentPoint = gl.COLOR_ATTACHMENT0;
-		gl.framebufferTexture2D(
-			gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
-
-		let canRead = (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE);
-
-		console.log("PRÜFE: " + canRead);
+			// Copy the current content of the canvas into the texture
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, self._GLViewport.width, self._GLViewport.height, 0);
 
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			// Prepare shaders for drawing back to the canvas
+			var vertexShaderSource = `
+        attribute vec2 position;
+        varying vec2 texCoords;
+        void main() {
+            texCoords = (position + 1.0) / 2.0;
+            gl_Position = vec4(position, 0, 1);
+        }`;
 
-		console.log("AFTER")
+			// Image processing is defined here in this shader, currently coloring pixels in red, which have an value over 0.95 of 1.0 -> Similar to highlighting, just for testing
+			var fragmentShaderSource = `precision mediump float;
+            varying vec2 texCoords;
+            uniform sampler2D texture;
+            void main() {
+                vec4 texColor = texture2D(texture, texCoords);
+                float brightness = max(max(texColor.r, texColor.g), texColor.b);
+                if (brightness >= 0.95) {
+                    float redIntensity = (brightness - 0.95) / (1.0 - 0.95);
+                    gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
+                } else {
+                    gl_FragColor = texColor; // Original color
+                }
+            }`;
 
+			var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+			var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+			var shaderProgram = createProgram(gl, vertexShader, fragmentShader);
 
+			gl.useProgram(shaderProgram);
 
-		console.log("NACHHER Daten: " + data);*/
+			// Setup quad geometry (Plane which is placed on top of the current canvas, to draw on)
+			var vertices = new Float32Array([
+				-1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+				-1.0, 1.0, 1.0, -1.0, 1.0, 1.0
+			]);
+			var positionBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+			var positionLocation = gl.getAttribLocation(shaderProgram, 'position');
+			gl.enableVertexAttribArray(positionLocation);
+			gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
+			var textureLocation = gl.getUniformLocation(shaderProgram, 'texture');
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.uniform1i(textureLocation, 0);
+
+			// Draw the before created content
+			gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+			function createShader(gl, type, source) {
+				var shader = gl.createShader(type);
+				gl.shaderSource(shader, source);
+				gl.compileShader(shader);
+				if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+					console.error('Shader compile failed: ' + gl.getShaderInfoLog(shader));
+					gl.deleteShader(shader);
+					return null;
+				}
+				return shader;
+			}
+
+			function createProgram(gl, vertexShader, fragmentShader) {
+				var program = gl.createProgram();
+				gl.attachShader(program, vertexShader);
+				gl.attachShader(program, fragmentShader);
+				gl.linkProgram(program);
+				if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+					console.error('Program linking failed: ' + gl.getProgramInfoLog(program));
+					gl.deleteProgram(program);
+					return null;
+				}
+				return program;
+			}
+
+		}
+
+		// TODO End image processing
+
+		/*self.HelperFunc_UpdateAllAttributes(self, gl);
 
 
 		if(self._GLCurrentVertices.length <= 0) {
@@ -922,7 +967,7 @@ class WebGLRipperWrapper {
 		let indTypeSize = indTypeMap[indType] || 2; // Usually indices are unsigned shorts so it makes sense to just make it the default
 
 		let _indOffset = indOffset / indTypeSize;
-		
+
 		const indTypedArrayMap = {
 			[gl.UNSIGNED_BYTE]:  Uint8Array,
 			[gl.UNSIGNED_SHORT]: Uint16Array,
@@ -940,7 +985,7 @@ class WebGLRipperWrapper {
 
 		for (let ind = 0; ind < indCount; ind++)
 			indices[ind] = oIndices[_indOffset + ind];
-	
+
 		LogToParent("New indices size: ", indices.length);
 
 		let textures = self.HelperFunc_GetAllTextures(self, gl);
@@ -956,11 +1001,11 @@ class WebGLRipperWrapper {
 		LogToParent("Finished Building OBJ: ", builtOBJ);
 
 		// Cleanup
-		self.HelperFunc_Flush(self, gl);
+		self.HelperFunc_Flush(self, gl);*/
 	}
 
 	hooked_drawRangeElements(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawRangeElements
-		if (!self._isCapturing)
+		/*if (!self._isCapturing)
 			return;
 
 		let drawMode = args[0];
@@ -970,20 +1015,20 @@ class WebGLRipperWrapper {
 		let type = args[4];
 		let offset = args[5];
 
-		LogToParent("Captured unsupported 'drawRangeElements' call: ", args);
+		LogToParent("Captured unsupported 'drawRangeElements' call: ", args);*/
 	}
 
 	hooked_drawBuffers(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawBuffers
-		if (!self._isCapturing)
+		/*if (!self._isCapturing)
 			return;
 
 		let buffers = args[0];
 
-		LogToParent("Captured unsupported 'drawBuffers' call: ", args);
+		LogToParent("Captured unsupported 'drawBuffers' call: ", args);*/
 	}
 
 	hooked_drawElementsInstanced(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawElementsInstanced
-		if (!self._isCapturing)
+		/*if (!self._isCapturing)
 			return;
 
 		let drawMode = args[0];
@@ -994,28 +1039,28 @@ class WebGLRipperWrapper {
 
 		LogToParent("Captured unsupported 'drawElementsInstanced' call: ", args);
 		LogToParent("Forwarding to 'drawElements'...");
-		self.hooked_drawElements(self, gl, args, oFunc);
+		self.hooked_drawElements(self, gl, args, oFunc);*/
 	}
 
 
 	hooked_createBuffer(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/createBuffer
-		
+		/*
 		let buffer = oFunc.apply(gl, args ? args : []);
 		self._GLBuffers.set(buffer, null);
 		
-		return buffer;
+		return buffer;*/
 	}
 
 	hooked_deleteBuffer(self, gl, args, oFunc) {
-		if(!args[0])
+		/*if(!args[0])
 			return;
-		self._GLState.delete(args[0]);
+		self._GLState.delete(args[0]);*/
 	}
 
 	hooked_bindBuffer(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer
-		let target = args[0];
+		/*let target = args[0];
 		let buffer = args[1];
-		self._GLState.set(target, buffer);
+		self._GLState.set(target, buffer);*/
 	}
 
 	hooked_bindFramebuffer(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer
@@ -1023,7 +1068,7 @@ class WebGLRipperWrapper {
 	}
 
 	hooked_bufferData(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData
-		let target = args[0];
+		/*let target = args[0];
 		let data = null;
 		switch (args.length) {
 			case 2:
@@ -1049,11 +1094,11 @@ class WebGLRipperWrapper {
 			LogToParent("Called buffer data without specifying data: ", args);
 			return;
 		}
-		self._GLBuffers.set(buffer, data);
+		self._GLBuffers.set(buffer, data);*/
 	}
 
 	hooked_bufferSubData(self, gl, args, oFunc) {
-		//LogToParent("bufferSubData: ", args);
+		/*//LogToParent("bufferSubData: ", args);
 		let target = args[0];
 		let offset = args[1];
 		let srcData = args[2];
@@ -1089,17 +1134,17 @@ class WebGLRipperWrapper {
 		}
 		let dstView = new Uint8Array(dstData);
 		let srcView = new Uint8Array(srcData);
-		dstView.set(srcView, offset);
+		dstView.set(srcView, offset);*/
 	}
 
 	hooked_getExtension(self, gl, args, oFunc) {
-
-		LogToParent("Registered possible extension: ", args[0]);
+/*
+		LogToParent("Registered possible extension: ", args[0]);*/
 
 	}
 
 	hooked_clear(self, gl, args, oFunc) { // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear
-		
+		/*
 
 
 		if (self._StartCapturing && self._IsEnabled) { // Fix Race conditions
@@ -1115,13 +1160,13 @@ class WebGLRipperWrapper {
 			self._needsToReset = false;
 		}
 
-		self.HelperFunc_Flush(self, gl);
+		self.HelperFunc_Flush(self, gl);*/
 	}
 
 
 
 	readUniformData(gl, p) {
-		let uniformData = [];
+		/*let uniformData = [];
 		let program = gl.getParameter(gl.CURRENT_PROGRAM);
 		if(!program)
 			return;
@@ -1138,11 +1183,11 @@ class WebGLRipperWrapper {
 				type: info.type
 			});
 		}
-		return uniformData;
+		return uniformData;*/
 	}
 
 	readAttribData(gl, p) {
-		let attribData = [];
+		/*let attribData = [];
 		let program = gl.getParameter(gl.CURRENT_PROGRAM);
 		if(!program)
 			return;
@@ -1160,22 +1205,22 @@ class WebGLRipperWrapper {
 				type: info.type
 			});
 		}
-		return attribData;
+		return attribData;*/
 	}
 
 	getBufferedIndices(self) {
-		let index = self._GLContext.getParameter(self._GLContext.ELEMENT_ARRAY_BUFFER_BINDING);
-		return index == null ? null : self.getBufferDataFromBuffer(self, index);
+		/*let index = self._GLContext.getParameter(self._GLContext.ELEMENT_ARRAY_BUFFER_BINDING);
+		return index == null ? null : self.getBufferDataFromBuffer(self, index);*/
 	}
 
 	getBufferDataFromBuffer(self, buffer) {
-		return self._GLBuffers.get(buffer);
+		/*return self._GLBuffers.get(buffer);*/
 	}
 
 }
 
 function readFramebufferPixels(gl) {
-	// TODO Check if _GLViewport is initialised
+	/*// TODO Check if _GLViewport is initialised
 	if (!self._GLViewport || self._GLViewport.width === undefined || self._GLViewport.height === undefined) {
 		console.error("Viewport not defined or incomplete");
 		return;
@@ -1193,7 +1238,7 @@ function readFramebufferPixels(gl) {
 	gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
 	// Test use of the pixelvalues, printing them to the log console
-	console.log("Pixel Values: " + pixels);
+	console.log("Pixel Values: " + pixels);*/
 }
 
 // Just in case the site checks for function modifications through a string check.
