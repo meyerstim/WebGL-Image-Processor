@@ -3,7 +3,9 @@ let _window = window;
 let pixelContainer;
 let pixelContainerConvert;
 let gl;
-let version;
+let version = 0;
+let multi = 0;
+let contextNames = ["webgl2", "webgl", "experimental-webgl"];
 
 // Create config object for handling WebGL settings and keycodes.
 _window.WEBGLRipperSettings = {
@@ -85,7 +87,6 @@ class WebGLWrapper {
 
 	// Initializes shaders and stores the custom shader program for image processing
 	initializeShaderProgram() {
-		console.log("SETUP")
 		const gl = this._GLContext;
 		const vertexShaderSource = `
             attribute vec2 position;
@@ -221,31 +222,34 @@ function RegisterGLFunction(_GL, _RipperWrapper, _Method) {
 
 // Setup
 // Initialize the wrapper and set up the interception
-LogToParent("Attempting to hook into canvas 'getContext' function!");
-let canvas = document.getElementsByTagName('canvas');
-let contextNames = ["webgl2", "webgl", "experimental-webgl"];
-for (let version = 0; version < contextNames.length; version++) {
-	gl = canvas[0].getContext(contextNames[version]);
-	if (gl != null) {
-		break;
+LogToParent("Attempting to hook into available Canvases!");
+// Call for all available canvases
+let canvases = document.querySelectorAll('canvas');
+// Iterate through all available canvases to check whether there is a available context to do processing on
+for (multi = 0; multi < canvases.length; multi++) {
+	LogToParent("Hooking in Canvas: " + (multi+1) + " / " + canvases.length)
+	for (version = 0; version < contextNames.length; version++) {
+		gl = canvases[multi].getContext(contextNames[version]);
+		if (gl != null) {
+			break;
+		}
+		LogToParent("Found no supported WebGL context")
 	}
-	LogToParent("Found no supported WebGL context")
-}
+	// Error handling, if no (supported) WebGL context could be set up
+	try {
+		if (!gl._hooked) {
+			// Creates new Instanz of WebGLWrapper for received context
+			let glRipper = new WebGLWrapper(gl);
+			glRipper._IsWebGL2 = (contextNames[version] == 'webgl2');
+			// Registers hooked functions in WebGL-Context.
+			RegisterGLFunction(gl, glRipper, "viewport");
+			RegisterGLFunction(gl, glRipper, "drawElements");
 
-// Error handling, if no (supported) WebGL context could be set up
-try {
-	if (!gl._hooked) {
-		// Creates new Instanz of WebGLWrapper for received context
-		let glRipper = new WebGLWrapper(gl);
-		glRipper._IsWebGL2 = (contextNames[version] == 'webgl2');
-		// Registers hooked functions in WebGL-Context.
-		RegisterGLFunction(gl, glRipper, "viewport");
-		RegisterGLFunction(gl, glRipper, "drawElements");
-
-		_window.RIPPERS.push(glRipper);
-		gl._hooked = true;
-		LogToParent(`Injected into ` + contextNames[version] + ` context!`, _window.RIPPERS);
+			_window.RIPPERS.push(glRipper);
+			gl._hooked = true;
+			LogToParent(`Injected into ` + contextNames[version] + ` context of Canvas ` +  (multi+1));
+		}
+	} catch (error) {
+		LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
 	}
-} catch (error) {
-	LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
 }
