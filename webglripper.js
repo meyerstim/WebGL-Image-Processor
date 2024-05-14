@@ -6,6 +6,10 @@ let gl;
 let version = 0;
 let multi = 0;
 let contextNames = ["webgl2", "webgl", "experimental-webgl"];
+// Coordinates for partial image processing
+// TODO Boxcraft oder ähnliches integrieren, um Koordinaten abzurufen. Und diese dann setzen, für Verarbeitung im Fragment shader
+let coordinatesLeftBottom;
+let coordinatesRightTop;
 
 // Create config object for handling WebGL settings and keycodes.
 _window.WEBGLRipperSettings = {
@@ -99,18 +103,37 @@ class WebGLWrapper {
 
 		const fragmentShaderSource = `
             precision mediump float;
-            	varying vec2 texCoords;
-            	uniform sampler2D texture;
-            	void main() {
-                	vec4 texColor = texture2D(texture, texCoords);
-                	float brightness = max(max(texColor.r, texColor.g), texColor.b);
-                	if (brightness >= 0.6) {
-                    	float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
-                    	gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
-                	} else {
-                    	gl_FragColor = texColor; // Original color
-                	}
-            }`;
+			varying vec2 texCoords;
+			uniform sampler2D texture;
+			uniform vec2 resolution; // Canvas-size
+			uniform vec2 bottomLeft; // Uniform-Variable for left bottom corner
+			uniform vec2 topRight; // Uniform-Variable for right top corner
+
+		void main() {
+    		vec4 texColor = texture2D(texture, texCoords);
+
+    		// Transformation of normalised texCoords in screen coordinates
+    		vec2 screenCoords = texCoords * resolution;
+
+    		// Check if pixel in selected area
+    		if (screenCoords.x >= bottomLeft.x && screenCoords.x <= topRight.x &&
+        		screenCoords.y >= bottomLeft.y && screenCoords.y <= topRight.y) {
+        		
+        		// Pixel processing with desired algorithm
+        		float brightness = max(max(texColor.r, texColor.g), texColor.b);
+        		if (brightness >= 0.6) {
+            		float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+            		gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Roter Ton
+        		} else {
+            		gl_FragColor = texColor; // Original value, of not above treshold
+        		}
+        		
+    		} else {
+        		// No processing for individual pixel if out of selected area
+        		gl_FragColor = texColor;
+    		}
+		}
+`;
 		const vertexShader = this.createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 		const fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
 		// Custom vertex and fragment shader get linked
@@ -182,8 +205,16 @@ class WebGLWrapper {
 			// IMAGE processing:
 			// use custom shader program
 			gl.useProgram(self.imageProcessingProgram);
+
+			// Variables for fragment shader; Coordinates used to do partial processing
+			// TODO Make coordinated dynamic with boxcraft selection, otherwise allways full processing
+			var bottomLeftLocation = gl.getUniformLocation(self.imageProcessingProgram, 'bottomLeft');
+			var topRightLocation = gl.getUniformLocation(self.imageProcessingProgram, 'topRight');
 			var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
+			gl.uniform2f(bottomLeftLocation, coordinatesLeftBottom[0], coordinatesLeftBottom[1]);
+			gl.uniform2f(topRightLocation, coordinatesRightTop[0], coordinatesRightTop[1]);
 			gl.uniform2f(resolutionLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
 			var textureLocation = gl.getUniformLocation(self.imageProcessingProgram, 'texture');
 			gl.activeTexture(gl.TEXTURE0);
 			// bind created texture which contains framebuffer content
@@ -246,6 +277,11 @@ if (canvases.length != 0) {
 				RegisterGLFunction(gl, glRipper, "viewport");
 				RegisterGLFunction(gl, glRipper, "drawElements");
 				RegisterGLFunction(gl, glRipper, "drawArrays");
+
+				// Sets processing coordinates to full context size as standard
+				// TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
+				coordinatesLeftBottom = [0.0, 0.0];
+				coordinatesRightTop = [gl.drawingBufferWidth, gl.drawingBufferHeight];
 
 				_window.RIPPERS.push(glRipper);
 				gl._hooked = true;
