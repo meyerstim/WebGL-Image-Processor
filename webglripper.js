@@ -132,23 +132,35 @@
             		gl_Position = vec4(position, 0, 1);
         	}`;
 
+<<<<<<< Updated upstream
 				// Image processing is defined here in this shader, currently coloring pixels in red, which have an value over 0.95 of 1.0 -> Similar to highlighting, just for testing
 				// TODO Here fragment shader for highlighting, uncomment and comment the one below for using either the other shader and vice versa
 				var fragmentShaderSource = `
 				precision mediump float;
+=======
+
+		const fragmentShaderSource = `
+            precision mediump float;
+>>>>>>> Stashed changes
             	varying vec2 texCoords;
             	uniform sampler2D texture;
             	void main() {
                 	vec4 texColor = texture2D(texture, texCoords);
                 	float brightness = max(max(texColor.r, texColor.g), texColor.b);
+<<<<<<< Updated upstream
                 	if (brightness >= 0.3) {
                     	float redIntensity = (brightness - 0.3) / (1.0 - 0.3);
+=======
+                	if (brightness >= 0.6) {
+                    	float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+>>>>>>> Stashed changes
                     	gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
                 	} else {
                     	gl_FragColor = texColor; // Original color
                 	}
             }`;
 
+<<<<<<< Updated upstream
 				// TODO Here fragment shader for Sobel edge detection, uncomment and comment the one above for using either the other shader and vice versa
 				/*var fragmentShaderSource = `
                     precision mediump float;
@@ -178,6 +190,43 @@
                            grad_x += texTL * vec3(-1.0) + texTC * vec3(0.0) + texTR * vec3(1.0);
                         grad_x += texCL * vec3(-2.0) + texCC * vec3(0.0) + texCR * vec3(2.0);
                         grad_x += texBL * vec3(-1.0) + texBC * vec3(0.0) + texBR * vec3(1.0);
+=======
+	// Handle viewport changes and apply the image processing shader (resolution conversion)
+	hooked_viewport(self, gl, args, oFunc) {
+		if (_window.WEBGLRipperSettings.counter == 1) {
+			let _x = args[0];
+			let _y = args[1];
+			let _width = args[2];
+			let _height = args[3];
+
+			self._GLViewport = {x: _x, y: _y, width: _width, height: _height};
+			oFunc.apply(gl, args);
+
+			// Check if _GLViewport is defined
+			if (!self._GLViewport || self._GLViewport.width === undefined || self._GLViewport.height === undefined) {
+				LogToParent("ERROR: Viewport is not defined or incomplete");
+				return;
+			}
+
+			//Checks if shader program had been initialised and assigned correctly
+			if (self.imageProcessingProgram && gl.getUniformLocation(self.imageProcessingProgram, 'resolution')) {
+				// custom shader program is now used for all operations
+				gl.useProgram(self.imageProcessingProgram);
+				var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
+				gl.uniform2f(resolutionLocation, _width, _height);
+			}
+
+			/*let width = self._GLViewport.width;  // Breite des Viewports
+            let height = self._GLViewport.height; // Höhe des Viewports
+
+            pixelContainerConvert = new Uint8Array(width * height * 4);
+            pixelContainer = new Uint8Array(pixelContainerConvert.length / 4);   // RGBA für jedes Pixel
+            // Read pixel-values from Framebuffer
+            gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixelContainerConvert);
+            for (let i = 0; i < pixelContainerConvert.length; i += 4) pixelContainer[i / 4] = pixelContainerConvert[i];*/
+		}
+	}
+>>>>>>> Stashed changes
 
                         // Apply Sobel operator for Y gradient
                         grad_y += texTL * vec3(-1.0) + texTC * vec3(-2.0) + texTR * vec3(-1.0);
@@ -189,11 +238,21 @@
                 }
                 `;*/
 
+<<<<<<< Updated upstream
 				var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 				var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
 				var shaderProgram = createProgram(gl, vertexShader, fragmentShader);
 
 				gl.useProgram(shaderProgram);
+=======
+			// Create and bind Framebuffer, to render into texture instead of canvas
+			var framebuffer = gl.createFramebuffer();
+			gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+>>>>>>> Stashed changes
 
 				var texSizeLocation = gl.getUniformLocation(shaderProgram, 'texSize');
 				gl.uniform2f(texSizeLocation, self._GLViewport.width, self._GLViewport.height);  // Set the texture size
@@ -215,8 +274,14 @@
 				gl.bindTexture(gl.TEXTURE_2D, texture);
 				gl.uniform1i(textureLocation, 0);
 
+<<<<<<< Updated upstream
 				// Draw the before created content
 				gl.drawArrays(gl.TRIANGLES, 0, 6);
+=======
+			// Redraw scene, but with modified shader program for pixel / image processing
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+			gl.deleteTexture(texture);
+>>>>>>> Stashed changes
 
 				function createShader(gl, type, source) {
 					var shader = gl.createShader(type);
@@ -246,6 +311,11 @@
 			// TODO End image processing
 		}
 	}
+<<<<<<< Updated upstream
+=======
+
+}
+>>>>>>> Stashed changes
 
 	function RegisterGLFunction(_GL, _RipperWrapper, _Method) {
 		if (_GL[_Method] == undefined) return;
