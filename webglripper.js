@@ -226,30 +226,33 @@ LogToParent("Attempting to hook into available Canvases!");
 // Call for all available canvases
 let canvases = document.querySelectorAll('canvas');
 // Iterate through all available canvases to check whether there is a available context to do processing on
-for (multi = 0; multi < canvases.length; multi++) {
-	LogToParent("Hooking in Canvas: " + (multi+1) + " / " + canvases.length)
-	for (version = 0; version < contextNames.length; version++) {
-		gl = canvases[multi].getContext(contextNames[version]);
-		if (gl != null) {
-			break;
+if (canvases.length != 0) {
+	for (multi = 0; multi < canvases.length; multi++) {
+		LogToParent("Hooking in Canvas: " + (multi + 1) + " / " + canvases.length)
+		for (version = 0; version < contextNames.length; version++) {
+			gl = canvases[multi].getContext(contextNames[version]);
+			if (gl != null) {
+				break;
+			}
+			LogToParent("Found no supported WebGL context.")
 		}
-		LogToParent("Found no supported WebGL context")
-	}
-	// Error handling, if no (supported) WebGL context could be set up
-	try {
-		if (!gl._hooked) {
-			// Creates new Instanz of WebGLWrapper for received context
-			let glRipper = new WebGLWrapper(gl);
-			glRipper._IsWebGL2 = (contextNames[version] == 'webgl2');
-			// Registers hooked functions in WebGL-Context.
-			RegisterGLFunction(gl, glRipper, "viewport");
-			RegisterGLFunction(gl, glRipper, "drawElements");
+		// Error handling, if no (supported) WebGL context could be set up
+		try {
+			if (!gl._hooked) {
+				// Creates new Instance of WebGLWrapper for received context
+				let glRipper = new WebGLWrapper(gl);
+				glRipper._IsWebGL2 = (contextNames[version] == 'webgl2');
+				// Registers hooked functions in WebGL-Context.
+				RegisterGLFunction(gl, glRipper, "viewport");
+				RegisterGLFunction(gl, glRipper, "drawElements");
+				RegisterGLFunction(gl, glRipper, "drawArrays");
 
-			_window.RIPPERS.push(glRipper);
-			gl._hooked = true;
-			LogToParent(`Injected into ` + contextNames[version] + ` context of Canvas ` +  (multi+1));
+				_window.RIPPERS.push(glRipper);
+				gl._hooked = true;
+				LogToParent(`Injected into ` + contextNames[version] + ` context of Canvas ` + (multi + 1));
+			}
+		} catch (error) {
+			LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
 		}
-	} catch (error) {
-		LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
 	}
-}
+} else {LogToParent("No canvas was found on this website, thus no webgl context could be retrieved for image processing.")}
