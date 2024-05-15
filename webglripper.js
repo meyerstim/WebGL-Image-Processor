@@ -1,27 +1,104 @@
 // Declare global variables to store references to the window, pixel data, and WebGL context.
 let _window = window;
-let pixelContainer;
-let pixelContainerConvert;
 let gl;
-let version = 0;
-let multi = 0;
-let contextNames = ["webgl2", "webgl", "experimental-webgl"];
-// Coordinates for partial image processing
-// TODO Boxcraft oder ähnliches integrieren, um Koordinaten abzurufen. Und diese dann setzen, für Verarbeitung im Fragment shader
-let coordinatesLeftBottom;
-let coordinatesRightTop;
+let contextNames = ["webgl2", "webgl", "experimental-webgl"]; // Possible version of WebGL-contexts
 
 // Create config object for handling WebGL settings and keycodes.
-_window.WEBGLRipperSettings = {
+_window.Settings = {
 	CaptureSceneKeyCode: 45, // Insert Key
 	CaptureTexturesKeyCode: 45, // Insert Key
 	isDebug: true, // Debug Printing if enabled
-	counter: 0 // value for toggling image processing
+	counter: 0, // value for toggling image processing
+	version: 0, // value for setting contextNames
+	multipleCanvases: 0, // iterator for existance of multiple canvases on one website
+	// Coordinates for partial image processing area
+	// TODO Boxcraft oder ähnliches integrieren, um Koordinaten abzurufen. Und diese dann setzen, für Verarbeitung im Fragment shader
+	coordinatesLeftBottom: [0.0, 0.0], // Standard with 0.0 is set to full canvas
+	coordinatesRightTop: [0.0, 0.0], // Standard with 0.0 is set to full canvas
+	globalFragmentShaderSetting: 'STANDARD' // Setting for different fragment shaders (Options: FRAG_SMILEY, FRAG_AREA, NULL->Standard)
 };
+
+const FRAG_SMILEY = `
+precision mediump float;
+uniform vec2 resolution; // Canvas size
+void main() {
+    vec2 center = vec2(0.5, 0.5); // Center of Smiley in normalised coordinates
+    float radius = 0.4; // Radius Smiley
+    float eyeRadius = 0.05; 
+    float mouthWidth = 0.05; 
+    float smileRadius = 0.3;
+    // Transform Pixel-coordinates to normalised coordinates
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec2 uvCentered = uv - center;
+    // Calculation distance from center
+    float dist = length(uvCentered);
+    // Draw Face
+    vec3 color = vec3(0.0);
+    if (dist < radius) {
+        color = vec3(1.0, 1.0, 0.0); // face in yellow
+        // Eyes
+        vec2 leftEyePos = center + vec2(-0.15, 0.1);
+        vec2 rightEyePos = center + vec2(0.15, 0.1);
+        float leftEyeDist = length(uv - leftEyePos);
+        float rightEyeDist = length(uv - rightEyePos);
+        if (leftEyeDist < eyeRadius || rightEyeDist < eyeRadius) {
+            color = vec3(0.0);
+        }
+        // Mouth
+        float mouthDist = length(uvCentered + vec2(0.0, -0.15));
+        if (mouthDist < smileRadius + mouthWidth && mouthDist > smileRadius - mouthWidth && uv.y < center.y) {
+            color = vec3(1.0, 0.0, 0.0); // mouth in red
+        }
+    }
+    gl_FragColor = vec4(color, 1.0);
+}`;
+
+const FRAG_AREA = `
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 resolution; // Canvas-size
+uniform vec2 bottomLeft; // Uniform-Variable for left bottom corner
+uniform vec2 topRight; // Uniform-Variable for right top corner
+void main() {
+    vec4 texColor = texture2D(texture, texCoords);
+    // Transformation of normalised texCoords in screen coordinates
+    vec2 screenCoords = texCoords * resolution;
+    // Check if pixel in selected area
+    if (screenCoords.x >= bottomLeft.x && screenCoords.x <= topRight.x &&
+        screenCoords.y >= bottomLeft.y && screenCoords.y <= topRight.y) {
+        // Pixel processing with desired algorithm
+        float brightness = max(max(texColor.r, texColor.g), texColor.b);
+        if (brightness >= 0.6) {
+            float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+            gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Roter Ton
+        } else {
+            gl_FragColor = texColor; // Original value, of not above treshold
+        }        		
+    } else {
+        // No processing for individual pixel if out of selected area
+        gl_FragColor = texColor;
+    }
+}`;
+
+const FRAG_STANDARD = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+void main() {
+	vec4 texColor = texture2D(texture, texCoords);
+	float brightness = max(max(texColor.r, texColor.g), texColor.b);
+	if (brightness >= 0.6) {
+		float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+		gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
+	} else {
+		gl_FragColor = texColor; // Original color
+	}
+}`;
 
 // Function to log messages to the console if debugging is enabled.
 let LogToParent = function () {
-	if (!_window.WEBGLRipperSettings.isDebug)
+	if (!_window.Settings.isDebug)
 		return;
 	_window.console.log('[WebGLRipper]', ...arguments);
 };
@@ -30,17 +107,17 @@ _window.RIPPERS = [];
 
 // Event listener for keydown events to toggle image processing.
 document.addEventListener('keydown', function (event) {
-	if (event.keyCode == _window.WEBGLRipperSettings.CaptureSceneKeyCode && !event.shiftKey) {
-		if (_window.WEBGLRipperSettings.counter === 0) {
+	if (event.keyCode == _window.Settings.CaptureSceneKeyCode && !event.shiftKey) {
+		if (_window.Settings.counter === 0) {
 			_window.RIPPERS[0]._StartCapturing = true;
 			_window.RIPPERS[0]._isCapturing = true;
-			_window.WEBGLRipperSettings.counter = 1;
+			_window.Settings.counter = 1;
 			LogToParent("Image-Processing activated.")
 		} else {
 			_window.RIPPERS[0]._StartCapturing = false;
 			_window.RIPPERS[0]._IsEnabled = false;
 			_window.RIPPERS[0]._isCapturing = false;
-			_window.WEBGLRipperSettings.counter = 0;
+			_window.Settings.counter = 0;
 			LogToParent("Image-Processing deactivated.")
 		}
 	}
@@ -100,40 +177,23 @@ class WebGLWrapper {
             		gl_Position = vec4(position, 0, 1);
         	}`;
 
-
-		const fragmentShaderSource = `
-            precision mediump float;
-			varying vec2 texCoords;
-			uniform sampler2D texture;
-			uniform vec2 resolution; // Canvas-size
-			uniform vec2 bottomLeft; // Uniform-Variable for left bottom corner
-			uniform vec2 topRight; // Uniform-Variable for right top corner
-
-		void main() {
-    		vec4 texColor = texture2D(texture, texCoords);
-
-    		// Transformation of normalised texCoords in screen coordinates
-    		vec2 screenCoords = texCoords * resolution;
-
-    		// Check if pixel in selected area
-    		if (screenCoords.x >= bottomLeft.x && screenCoords.x <= topRight.x &&
-        		screenCoords.y >= bottomLeft.y && screenCoords.y <= topRight.y) {
-        		
-        		// Pixel processing with desired algorithm
-        		float brightness = max(max(texColor.r, texColor.g), texColor.b);
-        		if (brightness >= 0.6) {
-            		float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
-            		gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Roter Ton
-        		} else {
-            		gl_FragColor = texColor; // Original value, of not above treshold
-        		}
-        		
-    		} else {
-        		// No processing for individual pixel if out of selected area
-        		gl_FragColor = texColor;
-    		}
+		// Sets the used Fragment shader, by evaluation the value of '_window.Settings.globalFragmentShaderSetting'
+		function chooseShaderOption(globalFragmentShaderSetting) {
+			if (globalFragmentShaderSetting === 'FRAG_AREA') {
+				LogToParent("Using Fragment shader for processing: AREA")
+				return FRAG_AREA;
+			} else if (globalFragmentShaderSetting === 'FRAG_SMILEY') {
+				LogToParent("Using Fragment shader for processing: SMILEY")
+				return FRAG_SMILEY;
+			} else {
+				LogToParent("Using Fragment shader for processing: STANDARD")
+				return FRAG_STANDARD;
+			}
 		}
-`;
+
+		// Fragment shader is set by above function, to be able to decide out of different shaders
+		const fragmentShaderSource = chooseShaderOption(_window.Settings.globalFragmentShaderSetting);
+
 		const vertexShader = this.createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 		const fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
 		// Custom vertex and fragment shader get linked
@@ -142,7 +202,7 @@ class WebGLWrapper {
 
 	// Handle viewport changes and apply the image processing shader (resolution conversion)
 	hooked_viewport(self, gl, args, oFunc) {
-		if (_window.WEBGLRipperSettings.counter == 1) {
+		if (_window.Settings.counter == 1) {
 			let _x = args[0];
 			let _y = args[1];
 			let _width = args[2];
@@ -164,21 +224,12 @@ class WebGLWrapper {
 				var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
 				gl.uniform2f(resolutionLocation, _width, _height);
 			}
-
-			/*let width = self._GLViewport.width;  // Breite des Viewports
-            let height = self._GLViewport.height; // Höhe des Viewports
-
-            pixelContainerConvert = new Uint8Array(width * height * 4);
-            pixelContainer = new Uint8Array(pixelContainerConvert.length / 4);   // RGBA für jedes Pixel
-            // Read pixel-values from Framebuffer
-            gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixelContainerConvert);
-            for (let i = 0; i < pixelContainerConvert.length; i += 4) pixelContainer[i / 4] = pixelContainerConvert[i];*/
 		}
 	}
 
 	// Process image data when drawElements is triggered.
 	hooked_drawElements(self, gl, args, oFunc) {
-		if (_window.WEBGLRipperSettings.counter == 1) {
+		if (_window.Settings.counter == 1) {
 			// Execute the original draw call to capture current state
 			oFunc.apply(gl, args);
 
@@ -211,8 +262,8 @@ class WebGLWrapper {
 			var bottomLeftLocation = gl.getUniformLocation(self.imageProcessingProgram, 'bottomLeft');
 			var topRightLocation = gl.getUniformLocation(self.imageProcessingProgram, 'topRight');
 			var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
-			gl.uniform2f(bottomLeftLocation, coordinatesLeftBottom[0], coordinatesLeftBottom[1]);
-			gl.uniform2f(topRightLocation, coordinatesRightTop[0], coordinatesRightTop[1]);
+			gl.uniform2f(bottomLeftLocation, _window.Settings.coordinatesLeftBottom[0], _window.Settings.coordinatesLeftBottom[1]);
+			gl.uniform2f(topRightLocation, _window.Settings.coordinatesRightTop[0], _window.Settings.coordinatesRightTop[1]);
 			gl.uniform2f(resolutionLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
 			var textureLocation = gl.getUniformLocation(self.imageProcessingProgram, 'texture');
@@ -258,10 +309,10 @@ LogToParent("Attempting to hook into available Canvases!");
 let canvases = document.querySelectorAll('canvas');
 // Iterate through all available canvases to check whether there is a available context to do processing on
 if (canvases.length != 0) {
-	for (multi = 0; multi < canvases.length; multi++) {
-		LogToParent("Hooking in Canvas: " + (multi + 1) + " / " + canvases.length)
-		for (version = 0; version < contextNames.length; version++) {
-			gl = canvases[multi].getContext(contextNames[version]);
+	for (_window.Settings.multipleCanvases = 0; _window.Settings.multipleCanvases < canvases.length; _window.Settings.multipleCanvases++) {
+		LogToParent("Hooking in Canvas: " + (_window.Settings.multipleCanvases + 1) + " / " + canvases.length)
+		for (version = 0; version < contextNames.length; _window.Settings.version++) {
+			gl = canvases[_window.Settings.multipleCanvases].getContext(contextNames[_window.Settings.version]);
 			if (gl != null) {
 				break;
 			}
@@ -272,23 +323,28 @@ if (canvases.length != 0) {
 			if (!gl._hooked) {
 				// Creates new Instance of WebGLWrapper for received context
 				let glRipper = new WebGLWrapper(gl);
-				glRipper._IsWebGL2 = (contextNames[version] == 'webgl2');
+				glRipper._IsWebGL2 = (contextNames[_window.Settings.version] == 'webgl2');
 				// Registers hooked functions in WebGL-Context.
 				RegisterGLFunction(gl, glRipper, "viewport");
 				RegisterGLFunction(gl, glRipper, "drawElements");
-				RegisterGLFunction(gl, glRipper, "drawArrays");
 
-				// Sets processing coordinates to full context size as standard
+				// Sets processing coordinates to full context size as standard, if no other value is set
 				// TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
-				coordinatesLeftBottom = [0.0, 0.0];
-				coordinatesRightTop = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+				if (_window.Settings.coordinatesLeftBottom[0] === 0.0 && _window.Settings.coordinatesLeftBottom[1] === 0.0) {
+					_window.Settings.coordinatesLeftBottom = [0.0, 0.0];
+				}
+				if (_window.Settings.coordinatesRightTop[0] === 0.0 && _window.Settings.coordinatesRightTop[1] === 0.0) {
+					_window.Settings.coordinatesRightTop = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+				}
 
 				_window.RIPPERS.push(glRipper);
 				gl._hooked = true;
-				LogToParent(`Injected into ` + contextNames[version] + ` context of Canvas ` + (multi + 1));
+				LogToParent(`Injected into ` + contextNames[_window.Settings.version] + ` context of Canvas ` + (_window.Settings.multipleCanvases + 1));
 			}
 		} catch (error) {
 			LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
 		}
 	}
-} else {LogToParent("No canvas was found on this website, thus no webgl context could be retrieved for image processing.")}
+} else {
+	LogToParent("No canvas was found on this website, thus no webgl context could be retrieved for image processing.")
+}
