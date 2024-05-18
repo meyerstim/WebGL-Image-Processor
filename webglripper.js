@@ -13,8 +13,8 @@ _window.Settings = {
 	multipleCanvases: 0, // iterator for existance of multiple canvases on one website
 	// Coordinates for partial image processing area
 	// TODO Boxcraft oder ähnliches integrieren, um Koordinaten abzurufen. Und diese dann setzen, für Verarbeitung im Fragment shader
-	coordinatesLeftBottom: [0.0, 0.0], // Standard with 0.0 is set to full canvas
-	coordinatesRightTop: [0.0, 0.0], // Standard with 0.0 is set to full canvas
+	coordinatesLeftBottom: [150.0, 110.0], // Standard with 0.0 is set to full canvas
+	coordinatesRightTop: [280.0, 260.0], // Standard with 0.0 is set to full canvas
 	globalFragmentShaderSetting: 'STANDARD' // Setting for different fragment shaders (Options: FRAG_SMILEY, FRAG_AREA, NULL->Standard)
 };
 
@@ -107,7 +107,7 @@ _window.RIPPERS = [];
 
 // Event listener for keydown events to toggle image processing.
 document.addEventListener('keydown', function (event) {
-	if (event.keyCode == _window.Settings.CaptureSceneKeyCode && !event.shiftKey) {
+	if (event.keyCode === _window.Settings.CaptureSceneKeyCode && !event.shiftKey) {
 		if (_window.Settings.counter === 0) {
 			_window.RIPPERS[0]._StartCapturing = true;
 			_window.RIPPERS[0]._isCapturing = true;
@@ -181,6 +181,7 @@ class WebGLWrapper {
 		function chooseShaderOption(globalFragmentShaderSetting) {
 			if (globalFragmentShaderSetting === 'FRAG_AREA') {
 				LogToParent("Using Fragment shader for processing: AREA")
+				LogToParent("Coordinates of selection:" + _window.Settings.coordinatesLeftBottom[0] + ", " + _window.Settings.coordinatesLeftBottom[1] + " : " + _window.Settings.coordinatesRightTop[0] + ", " + _window.Settings.coordinatesRightTop[1])
 				return FRAG_AREA;
 			} else if (globalFragmentShaderSetting === 'FRAG_SMILEY') {
 				LogToParent("Using Fragment shader for processing: SMILEY")
@@ -226,6 +227,60 @@ class WebGLWrapper {
 			}
 		}
 	}
+
+	hooked_drawArrays(self, gl, args, oFunc) {
+		if (_window.Settings.counter === 1) {
+			// Execute the original draw call to capture current state
+			oFunc.apply(gl, args);
+
+			// Setup empty texture to store framebuffer content
+			var texture = gl.createTexture();
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, self._GLViewport.width, self._GLViewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+			// Create and bind Framebuffer, to render into texture instead of canvas
+			var framebuffer = gl.createFramebuffer();
+			gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0);
+
+			// IMAGE processing:
+			// use custom shader program
+			gl.useProgram(self.imageProcessingProgram);
+
+			// Variables for fragment shader; Coordinates used to do partial processing
+			// TODO Make coordinated dynamic with boxcraft selection, otherwise allways full processing
+			var bottomLeftLocation = gl.getUniformLocation(self.imageProcessingProgram, 'bottomLeft');
+			var topRightLocation = gl.getUniformLocation(self.imageProcessingProgram, 'topRight');
+			var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
+			gl.uniform2f(bottomLeftLocation, _window.Settings.coordinatesLeftBottom[0], _window.Settings.coordinatesLeftBottom[1]);
+			gl.uniform2f(topRightLocation, _window.Settings.coordinatesRightTop[0], _window.Settings.coordinatesRightTop[1]);
+			gl.uniform2f(resolutionLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+			var textureLocation = gl.getUniformLocation(self.imageProcessingProgram, 'texture');
+			gl.activeTexture(gl.TEXTURE0);
+			// bind created texture which contains framebuffer content
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.uniform1i(textureLocation, 0);
+
+			// Redraw scene, but with modified shader program for pixel / image processing
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+			gl.deleteTexture(texture);
+
+		} else {
+			oFunc.apply(gl, args);
+		}
+	}
+
 
 	// Process image data when drawElements is triggered.
 	hooked_drawElements(self, gl, args, oFunc) {
@@ -327,6 +382,8 @@ if (canvases.length != 0) {
 				// Registers hooked functions in WebGL-Context.
 				RegisterGLFunction(gl, glRipper, "viewport");
 				RegisterGLFunction(gl, glRipper, "drawElements");
+				RegisterGLFunction(gl, glRipper, "drawArrays");
+
 
 				// Sets processing coordinates to full context size as standard, if no other value is set
 				// TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
