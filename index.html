@@ -140,6 +140,13 @@
             font-weight: bold;
         }
 
+        .source {
+            font-size: 8px;
+            color: lightgray;
+            display: block;
+
+        }
+
         #faq {
             margin-top:20px;
             margin-bottom: 200px;
@@ -251,6 +258,8 @@
                     <div class='overlay'>
                         <span class='sitename'>FULL</span>
                         <span class='tech'>Processing is performed for full canvas</span>
+                        </br>
+                        <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
                     </div>
                 <!--</a>-->
             </div>
@@ -260,6 +269,8 @@
                     <div class='overlay'>
                         <span class='sitename'>AREA Selection</span>
                         <span class='tech'>Processing is only performed for desired area</span>
+                        </br>
+                        <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
                     </div>
             </div>
 
@@ -285,15 +296,15 @@
             <h1>F.A.Q.</h1>
             <ol>
                 <li class="question" onclick="toggleAnswer(1)">What can be done with this tool?</li>
-                <li class="answer" id="answer1">Currently <a href='https://cornerstonejs.org' target='_blank'>Cornerstone2D.js</a> and <a href='https://github.com/niivue/niivue' target='_blank'>NiiVue.js</a>. Others like <a href='https://cornerstonejs.org' target='_blank'>openseadragon.js, <a href='https://slicedrop.com' target='_blank'>slicedrop.com</a>, <a href='https://rii-mango.github.io/Papaya/' target='_blank'>Papaya</a> are in the works! <a href="http://brainchop.org">BrainChop</a> we are coming for you - j/k :))))</li>
+                <li class="answer" id="answer1">XYZ</li>
                 <li class="question" onclick="toggleAnswer(2)">For which websites does it work?</li>
-                <li class="answer" id="answer2">Any processing with any library is possible! The examples above use plotly.js or ONNX.js. BOOSTLETs provide methods that allow data access and interaction across different frameworks through JS injection. This is all client-side, unless you send some requests to a server.</li>
+                <li class="answer" id="answer2">XYZ</li>
                 <li class="question" onclick="toggleAnswer(3)">Which types of processing can be done?</li>
-                <li class="answer" id="answer3">If the visualization framework supports it, we access the real data. If not, we fall back to canvas imagedata but we are working with the developers of the frameworks to fix that :)</li>
+                <li class="answer" id="answer3">XYZ</li>
                 <li class="question" onclick="toggleAnswer(4)">How can I develop my own processing algorithms?</li>
-                <li class="answer" id="answer4">Check out the code for the examples above - there is always the top block that imports boostlet.min.js and then a run method for the processing. It is pretty straight forward (especially the <a href="https://github.com/mpsych/boostlet/blob/main/examples/sobel.js" target="_blank">sobel.js</a> and <a href="https://github.com/mpsych/boostlet/blob/main/examples/plotly.js" target="_blank">plotly.js</a> examples) and any library or processing is possible.</li>
+                <li class="answer" id="answer4">XYZ</li>
                 <li class="question" onclick="toggleAnswer(5)">How is the backend working?</li>
-                <li class="answer" id="answer5">Fork the <a href="https://github.com/mpsych/boostlet/" target="_blank">repo</a> :) We use parcel.js as the build system. PRs are very welcome :)</li>
+                <li class="answer" id="answer5">XYZ</li>
             </ol>
         </div>
     </div>
