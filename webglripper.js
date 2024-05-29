@@ -28,7 +28,8 @@ function createShaderSelectorPopup() {
 	popup.style.backgroundColor = 'white';
 	popup.style.border = '2px solid red';
 	popup.style.fontWeight = 'bold';
-	popup.style.zIndex = 1000;
+	popup.style.zIndex = '10000'; // Ensures the dropdown is above other elements
+	popup.style.pointerEvents = 'auto'; // Ensures the dropdown is interactable
 	popup.innerHTML = `
         <label for="shaderSelector">Select Fragment Shader:</label>
         <select id="shaderSelector">
