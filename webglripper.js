@@ -96,6 +96,110 @@ void main() {
 	}
 }`;
 
+const FRAG_SOBEL = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    vec3 grad_x = vec3(0.0);
+    vec3 grad_y = vec3(0.0);
+    vec3 texTL = texture2D(texture, texCoords + vec2(-dx, -dy)).rgb; // Top-left
+    vec3 texTC = texture2D(texture, texCoords + vec2(0.0, -dy)).rgb; // Top-center
+    vec3 texTR = texture2D(texture, texCoords + vec2(dx, -dy)).rgb;  // Top-right
+    vec3 texCL = texture2D(texture, texCoords + vec2(-dx, 0.0)).rgb; // Center-left
+    vec3 texCC = texture2D(texture, texCoords).rgb;                  // Center-center
+    vec3 texCR = texture2D(texture, texCoords + vec2(dx, 0.0)).rgb;  // Center-right
+    vec3 texBL = texture2D(texture, texCoords + vec2(-dx, dy)).rgb;  // Bottom-left
+    vec3 texBC = texture2D(texture, texCoords + vec2(0.0, dy)).rgb;  // Bottom-center
+    vec3 texBR = texture2D(texture, texCoords + vec2(dx, dy)).rgb;   // Bottom-right
+    
+    // Apply Sobel operator for X gradient
+    grad_x += texTL * vec3(-1.0) + texTC * vec3(0.0) + texTR * vec3(1.0);
+    grad_x += texCL * vec3(-2.0) + texCC * vec3(0.0) + texCR * vec3(2.0);
+    grad_x += texBL * vec3(-1.0) + texBC * vec3(0.0) + texBR * vec3(1.0);
+    
+    // Apply Sobel operator for Y gradient
+    grad_y += texTL * vec3(-1.0) + texTC * vec3(-2.0) + texTR * vec3(-1.0);
+    grad_y += texCL * vec3(0.0) + texCC * vec3(0.0) + texCR * vec3(0.0);
+    grad_y += texBL * vec3(1.0) + texBC * vec3(2.0) + texBR * vec3(1.0);
+
+    float edgeStrength = length(grad_x) + length(grad_y);
+    gl_FragColor = vec4(vec3(edgeStrength), 1.0);
+}`;
+
+const FRAG_GAUSS = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    vec2 texOffset = 1.0 / texSize; // Gets size of single texel
+    vec4 result = vec4(0.0);
+    for(int x = -2; x <= 2; x++) {
+        for(int y = -2; y <= 2; y++) {
+            vec2 offset = vec2(float(x), float(y)) * texOffset;
+            result += texture2D(texture, texCoords + offset) * 0.04;
+        }
+    }
+    gl_FragColor = result;
+}`;
+
+const FRAG_INVERT = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+void main() {
+    vec4 color = texture2D(texture, texCoords);
+    gl_FragColor = vec4(vec3(1.0) - color.rgb, color.a);
+}`;
+
+const FRAG_SHARPENING = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    float strength = 10.0; // Strength of sharpening effect
+    vec4 texColor = texture2D(texture, texCoords);
+    vec4 texColorLeft = texture2D(texture, texCoords + vec2(-dx, 0.0));
+    vec4 texColorRight = texture2D(texture, texCoords + vec2(dx, 0.0));
+    vec4 texColorUp = texture2D(texture, texCoords + vec2(0.0, dy));
+    vec4 texColorDown = texture2D(texture, texCoords + vec2(0.0, -dy));
+    vec4 edge = texColor * (1.0 + 4.0 * strength) - (texColorLeft + texColorRight + texColorUp + texColorDown) * strength;
+    gl_FragColor = vec4(edge.rgb, texColor.a);
+}`;
+
+const FRAG_LAPLACE_EDGE = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    vec3 color = vec3(0.0);
+    color += texture2D(texture, texCoords + vec2(-dx, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2( 0.0, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2( dx, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx,  0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2( dx,  0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx,  dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2( 0.0,  dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2( dx,  dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords).rgb * 8.0;
+    
+    color = color * 2.0; // Adjust this factor to increase brightness and contrast
+    
+    gl_FragColor = vec4(color, 1.0);
+}`;
+
+
+
 // Function to log messages to the console if debugging is enabled.
 let LogToParent = function () {
 	if (!_window.Settings.isDebug)
@@ -186,6 +290,21 @@ class WebGLWrapper {
 			} else if (globalFragmentShaderSetting === 'FRAG_SMILEY') {
 				LogToParent("Using Fragment shader for processing: SMILEY")
 				return FRAG_SMILEY;
+			} else if (globalFragmentShaderSetting === 'FRAG_SOBEL') {
+				LogToParent("Using Fragment shader for processing: SOBEL Edge Detection")
+				return FRAG_SOBEL;
+			} else if (globalFragmentShaderSetting === 'FRAG_GAUSS') {
+				LogToParent("Using Fragment shader for processing: GAUSS")
+				return FRAG_GAUSS;
+			} else if (globalFragmentShaderSetting === 'FRAG_INVERT') {
+				LogToParent("Using Fragment shader for processing: COLOR INVERTER")
+				return FRAG_INVERT;
+			} else if (globalFragmentShaderSetting === 'FRAG_SHARPENING') {
+				LogToParent("Using Fragment shader for processing: SHARPENING")
+				return FRAG_SHARPENING;
+			} else if (globalFragmentShaderSetting === 'FRAG_LAPLACE_EDGE') {
+				LogToParent("Using Fragment shader for processing: LAPLACE Edge Detection")
+				return FRAG_LAPLACE_EDGE;
 			} else {
 				LogToParent("Using Fragment shader for processing: STANDARD")
 				return FRAG_STANDARD;
@@ -228,58 +347,7 @@ class WebGLWrapper {
 		}
 	}
 
-	hooked_drawArrays(self, gl, args, oFunc) {
-		if (_window.Settings.counter === 1) {
-			// Execute the original draw call to capture current state
-			oFunc.apply(gl, args);
 
-			// Setup empty texture to store framebuffer content
-			var texture = gl.createTexture();
-			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, self._GLViewport.width, self._GLViewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-			// Create and bind Framebuffer, to render into texture instead of canvas
-			var framebuffer = gl.createFramebuffer();
-			gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-
-			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0);
-
-			// IMAGE processing:
-			// use custom shader program
-			gl.useProgram(self.imageProcessingProgram);
-
-			// Variables for fragment shader; Coordinates used to do partial processing
-			// TODO Make coordinated dynamic with boxcraft selection, otherwise allways full processing
-			var bottomLeftLocation = gl.getUniformLocation(self.imageProcessingProgram, 'bottomLeft');
-			var topRightLocation = gl.getUniformLocation(self.imageProcessingProgram, 'topRight');
-			var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
-			gl.uniform2f(bottomLeftLocation, _window.Settings.coordinatesLeftBottom[0], _window.Settings.coordinatesLeftBottom[1]);
-			gl.uniform2f(topRightLocation, _window.Settings.coordinatesRightTop[0], _window.Settings.coordinatesRightTop[1]);
-			gl.uniform2f(resolutionLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-			var textureLocation = gl.getUniformLocation(self.imageProcessingProgram, 'texture');
-			gl.activeTexture(gl.TEXTURE0);
-			// bind created texture which contains framebuffer content
-			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.uniform1i(textureLocation, 0);
-
-			// Redraw scene, but with modified shader program for pixel / image processing
-			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-			gl.deleteTexture(texture);
-
-		} else {
-			oFunc.apply(gl, args);
-		}
-	}
 
 
 	// Process image data when drawElements is triggered.
@@ -313,7 +381,7 @@ class WebGLWrapper {
 			gl.useProgram(self.imageProcessingProgram);
 
 			// Variables for fragment shader; Coordinates used to do partial processing
-			// TODO Make coordinated dynamic with boxcraft selection, otherwise allways full processing
+			// TODO Make coordinates dynamic with boxcraft selection, otherwise allways full processing
 			var bottomLeftLocation = gl.getUniformLocation(self.imageProcessingProgram, 'bottomLeft');
 			var topRightLocation = gl.getUniformLocation(self.imageProcessingProgram, 'topRight');
 			var resolutionLocation = gl.getUniformLocation(self.imageProcessingProgram, 'resolution');
@@ -326,6 +394,10 @@ class WebGLWrapper {
 			// bind created texture which contains framebuffer content
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.uniform1i(textureLocation, 0);
+
+			// Set texSize uniform
+			var texSizeLocation = gl.getUniformLocation(self.imageProcessingProgram, 'texSize');
+			gl.uniform2f(texSizeLocation, self._GLViewport.width, self._GLViewport.height);
 
 			// Redraw scene, but with modified shader program for pixel / image processing
 			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/png" href="gfx/Icon.png">
+    <link rel="shortcut icon" type="image/png" href="gfx/ICON_WebGL-Image-Processor.png">
     <title>WebGL_Processor.js</title>
     <style>
         a {
@@ -238,7 +238,7 @@
 <body>
 <header>
     <div class="header-content">
-        <a href=''><img src='gfx/WebGL_Processor_Logo.png' alt='Logo' class='logo'></a></br>
+        <a href=''><img src='gfx/LOGO_WebGL-Image-Processor.png' alt='Logo' class='logo'></a></br>
         <!--<h1>Real-time image processing plugin for WebGL websites.</h1>-->
     </div>
 </header>
@@ -247,7 +247,7 @@
         <h3>To experience real-time image processing in your webbrowser</h3>
         <h2>Drag plugin to your bookmarks bar:</h2></br></br>
         <div class="buttons">
-            <div><a href='' id='webglripper.js'><button class="button">WebGL Image Processor</button></a><br></div>
+            <div><a href='' id='webglripper.js'><button class="button">WebGL Image Processor</button></a><br><div style='margin:2px'><a href='https://github.com/meyerstim/WebGL-Image-Processor/tree/Developing'target='_blank'><img src='gfx/badge.svg'></a></div></div>
         </div>
         </br></br>
         <h3>See for different examples of image processing performed with the WebGL Image Processor:</h3>
@@ -275,18 +275,40 @@
             </div>
 
             <div class="image-container">
+                <img src="gfx/Sobel_Filter.png" alt="SOBEL Edge Detection">
+                <div class='overlay'>
+                    <span class='sitename'>SOBEL Edge Detection</span>
+                    <span class='tech'>Edge detection filter with 3x3 kernel</span>
+                    </br>
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <img src="gfx/Laplace_Filter.png" alt="LAPLACE Edge Detection">
+                <div class='overlay'>
+                    <span class='sitename'>LAPLACE Edge Detection</span>
+                    <span class='tech'>Edge detection filter with laplace calculation</span>
+                    </br>
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <img src="gfx/Invert_Filter.png" alt="INVERTER">
+                <div class='overlay'>
+                    <span class='sitename'>INVERTER</span>
+                    <span class='tech'>Color of pixel getting inverted.</span>
+                    </br>
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+            </div>
+
+            <div class="image-container">
                  <img src="gfx/process_Smiley.png" alt="SMILEY">
                     <div class='overlay'>
                         <span class='sitename'>SMILEY</span>
                         <span class='tech'>Content gets fully overwritten with smiley</span>
-                    </div>
-            </div>
-
-            <div class="image-container">
-                    <img src="gfx/process_Smiley.png" alt="QUESTIONMARK">
-                    <div class='overlay'>
-                        <span class='sitename'>QUESTIONMARK</span>
-                        <span class='tech'>Hier könnte Ihre Werbung stehen</span>
                     </div>
             </div>
 
@@ -296,13 +318,13 @@
             <h1>F.A.Q.</h1>
             <ol>
                 <li class="question" onclick="toggleAnswer(1)">What can be done with this tool?</li>
-                <li class="answer" id="answer1">XYZ</li>
-                <li class="question" onclick="toggleAnswer(2)">For which websites does it work?</li>
-                <li class="answer" id="answer2">XYZ</li>
+                <li class="answer" id="answer1">Perform real-time image processing on existing WebGL content. You can use the tool on websites whereever WebGL is used as visualization framework. To perform different processing algorithms existing fragment shaders can be used or new ones can be added.</li>
+                <li class="question" onclick="toggleAnswer(2)">How to use the tool?</li>
+                <li class="answer" id="answer2">Drag the above available bookmarklet to your browsers bookmark list. When on a compatible site, click the bookmarklet and the neccessary JavaScript gets automatically injected. To start processing now press your <i>Insert</i> key. To disable processing at anytime press the same key again. </li>
                 <li class="question" onclick="toggleAnswer(3)">Which types of processing can be done?</li>
-                <li class="answer" id="answer3">XYZ</li>
+                <li class="answer" id="answer3">Currently ready to use: Dynamic color highlighting, Area selection processing, Sobel Edge Detection, Laplace Edge Detection, Color Inverter, Gaussian Blur, Full content replacement</li>
                 <li class="question" onclick="toggleAnswer(4)">How can I develop my own processing algorithms?</li>
-                <li class="answer" id="answer4">XYZ</li>
+                <li class="answer" id="answer4">Program a new fragment shader, according to the existing ones. Set it by the value <i>globalFragmentShaderSetting: 'FRAG_SOBEL'</i> and replace FRAG_SOBEL with your shaders name.</li>
                 <li class="question" onclick="toggleAnswer(5)">How is the backend working?</li>
                 <li class="answer" id="answer5">XYZ</li>
             </ol>
