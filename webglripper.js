@@ -18,14 +18,50 @@ _window.Settings = {
 	globalFragmentShaderSetting: 'STANDARD' // Setting for different fragment shaders (Options: FRAG_SMILEY, FRAG_AREA, NULL->Standard)
 };
 
+// Add the popup with a dropdown menu to the HTML document
+function createShaderSelectorPopup() {
+	let popup = document.createElement('div');
+	popup.style.position = 'fixed';
+	popup.style.top = '10px';
+	popup.style.left = '10px';
+	popup.style.padding = '10px';
+	popup.style.backgroundColor = 'white';
+	popup.style.border = '2px solid red';
+	popup.style.fontWeight = 'bold';
+	popup.style.zIndex = 1000;
+	popup.innerHTML = `
+        <label for="shaderSelector">Select Fragment Shader:</label>
+        <select id="shaderSelector">
+            <option value="STANDARD">STANDARD</option>
+            <option value="FRAG_SMILEY">FRAG_SMILEY</option>
+            <option value="FRAG_AREA">FRAG_AREA</option>
+            <option value="FRAG_SOBEL">FRAG_SOBEL</option>
+            <option value="FRAG_GAUSS">FRAG_GAUSS</option>
+            <option value="FRAG_INVERT">FRAG_INVERT</option>
+            <option value="FRAG_SHARPENING">FRAG_SHARPENING</option>
+            <option value="FRAG_LAPLACE_EDGE">FRAG_LAPLACE_EDGE</option>
+        </select>
+    `;
+	document.body.appendChild(popup);
+
+	let shaderSelector = document.getElementById('shaderSelector');
+	shaderSelector.addEventListener('change', function () {
+		_window.Settings.globalFragmentShaderSetting = shaderSelector.value;
+		updateShaderProgram();
+	});
+}
+
+// Initialize the shader selector popup
+createShaderSelectorPopup();
+
 const FRAG_SMILEY = `
 precision mediump float;
 uniform vec2 resolution; // Canvas size
 void main() {
     vec2 center = vec2(0.5, 0.5); // Center of Smiley in normalised coordinates
     float radius = 0.4; // Radius Smiley
-    float eyeRadius = 0.05; 
-    float mouthWidth = 0.05; 
+    float eyeRadius = 0.05;
+    float mouthWidth = 0.05;
     float smileRadius = 0.3;
     // Transform Pixel-coordinates to normalised coordinates
     vec2 uv = gl_FragCoord.xy / resolution.xy;
@@ -74,7 +110,7 @@ void main() {
             gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Roter Ton
         } else {
             gl_FragColor = texColor; // Original value, of not above treshold
-        }        		
+        }
     } else {
         // No processing for individual pixel if out of selected area
         gl_FragColor = texColor;
@@ -86,14 +122,14 @@ precision mediump float;
 varying vec2 texCoords;
 uniform sampler2D texture;
 void main() {
-	vec4 texColor = texture2D(texture, texCoords);
-	float brightness = max(max(texColor.r, texColor.g), texColor.b);
-	if (brightness >= 0.6) {
-		float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
-		gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
-	} else {
-		gl_FragColor = texColor; // Original color
-	}
+    vec4 texColor = texture2D(texture, texCoords);
+    float brightness = max(max(texColor.r, texColor.g), texColor.b);
+    if (brightness >= 0.6) {
+        float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+        gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Proper red tone
+    } else {
+        gl_FragColor = texColor; // Original color
+    }
 }`;
 
 const FRAG_SOBEL = ` 
@@ -184,21 +220,19 @@ void main() {
     float dy = 1.0 / texSize.y;
     vec3 color = vec3(0.0);
     color += texture2D(texture, texCoords + vec2(-dx, -dy)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2( 0.0, -dy)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2( dx, -dy)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2(-dx,  0.0)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2( dx,  0.0)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2(-dx,  dy)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2( 0.0,  dy)).rgb * -1.0;
-    color += texture2D(texture, texCoords + vec2( dx,  dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(0.0, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx, 0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, 0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx, dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(0.0, dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, dy)).rgb * -1.0;
     color += texture2D(texture, texCoords).rgb * 8.0;
     
     color = color * 2.0; // Adjust this factor to increase brightness and contrast
     
     gl_FragColor = vec4(color, 1.0);
 }`;
-
-
 
 // Function to log messages to the console if debugging is enabled.
 let LogToParent = function () {
@@ -275,11 +309,11 @@ class WebGLWrapper {
 		const gl = this._GLContext;
 		const vertexShaderSource = `
             attribute vec2 position;
-        		varying vec2 texCoords;
-        		void main() {
-            		texCoords = (position + 1.0) / 2.0;
-            		gl_Position = vec4(position, 0, 1);
-        	}`;
+            varying vec2 texCoords;
+            void main() {
+                texCoords = (position + 1.0) / 2.0;
+                gl_Position = vec4(position, 0, 1);
+            }`;
 
 		// Sets the used Fragment shader, by evaluation the value of '_window.Settings.globalFragmentShaderSetting'
 		function chooseShaderOption(globalFragmentShaderSetting) {
@@ -347,9 +381,6 @@ class WebGLWrapper {
 		}
 	}
 
-
-
-
 	// Process image data when drawElements is triggered.
 	hooked_drawElements(self, gl, args, oFunc) {
 		if (_window.Settings.counter == 1) {
@@ -408,6 +439,11 @@ class WebGLWrapper {
 		}
 	}
 
+	// Method to update shader program when the dropdown selection changes
+	updateShaderProgram() {
+		this.initializeShaderProgram();
+	}
+
 }
 
 // Register custom functions to intercept standard WebGL calls
@@ -456,6 +492,10 @@ if (canvases.length != 0) {
 				RegisterGLFunction(gl, glRipper, "drawElements");
 				RegisterGLFunction(gl, glRipper, "drawArrays");
 
+				// Method to update shader program when the dropdown selection changes
+				updateShaderProgram = function () {
+					glRipper.initializeShaderProgram();
+				}
 
 				// Sets processing coordinates to full context size as standard, if no other value is set
 				// TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
