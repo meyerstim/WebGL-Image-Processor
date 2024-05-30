@@ -31,16 +31,18 @@ function createShaderSelectorPopup() {
 	popup.style.zIndex = '10000'; // Ensures the dropdown is above other elements
 	popup.style.pointerEvents = 'auto'; // Ensures the dropdown is interactable
 	popup.innerHTML = `
-        <label for="shaderSelector">Select Fragment Shader:</label>
+        <label for="shaderSelector">Select Fragment Shader:</label></br>
         <select id="shaderSelector">
             <option value="STANDARD">STANDARD</option>
-            <option value="FRAG_SMILEY">FRAG_SMILEY</option>
-            <option value="FRAG_AREA">FRAG_AREA</option>
-            <option value="FRAG_SOBEL">FRAG_SOBEL</option>
-            <option value="FRAG_GAUSS">FRAG_GAUSS</option>
-            <option value="FRAG_INVERT">FRAG_INVERT</option>
-            <option value="FRAG_SHARPENING">FRAG_SHARPENING</option>
-            <option value="FRAG_LAPLACE_EDGE">FRAG_LAPLACE_EDGE</option>
+            <option value="FRAG_SMILEY">SMILEY</option>
+            <option value="FRAG_AREA">AREA</option>
+            <option value="FRAG_SOBEL">SOBEL</option>
+            <option value="FRAG_GAUSS">GAUSS</option>
+            <option value="FRAG_INVERT">INVERT</option>
+            <option value="FRAG_CONTRAST">CONTRAST</option>
+            <option value="FRAG_SHARPENING">SHARPENING</option>
+            <option value="FRAG_LAPLACE_EDGE">LAPLACE_EDGE</option>
+            <option value="FRAG_PSEUDOCOLOR_MAPPING">PSEUDOCOLOR</option>
         </select>
     `;
 	document.body.appendChild(popup);
@@ -235,6 +237,36 @@ void main() {
     gl_FragColor = vec4(color, 1.0);
 }`;
 
+const FRAG_PSEUDOCOLOR_MAPPING = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+vec3 grayscaleToColor(float gray) {
+    float r = smoothstep(0.0, 0.5, gray) - smoothstep(0.5, 1.0, gray);
+    float g = smoothstep(0.25, 0.75, gray);
+    float b = 1.0 - smoothstep(0.0, 1.0, gray);
+    return vec3(r, g, b);
+}
+void main() {
+    vec4 color = texture2D(texture, texCoords);
+    float intensity = color.r;
+    vec3 pseudocolor = grayscaleToColor(intensity);
+    gl_FragColor = vec4(pseudocolor, color.a);
+}`;
+
+const FRAG_CONTRAST = ` 
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+void main() {
+    vec4 color = texture2D(texture, texCoords);
+    float contrast = 5.0; // Kontrastfaktor direkt im Shader gesetzt
+    color.rgb /= color.a;
+    color.rgb = ((color.rgb - 0.5) * max(contrast, 0.0)) + 0.5;
+    color.rgb *= color.a;
+    gl_FragColor = color;
+}`;
+
 // Function to log messages to the console if debugging is enabled.
 let LogToParent = function () {
 	if (!_window.Settings.isDebug)
@@ -340,10 +372,18 @@ class WebGLWrapper {
 			} else if (globalFragmentShaderSetting === 'FRAG_LAPLACE_EDGE') {
 				LogToParent("Using Fragment shader for processing: LAPLACE Edge Detection")
 				return FRAG_LAPLACE_EDGE;
+			} else if (globalFragmentShaderSetting === 'FRAG_PSEUDOCOLOR_MAPPING') {
+				LogToParent("Using Fragment shader for processing: PSEUDCOLOR Mapping")
+				return FRAG_PSEUDOCOLOR_MAPPING;
+			} else if (globalFragmentShaderSetting === 'FRAG_CONTRAST') {
+				LogToParent("Using Fragment shader for processing: CONTRAST")
+				return FRAG_CONTRAST;
 			} else {
 				LogToParent("Using Fragment shader for processing: STANDARD")
 				return FRAG_STANDARD;
 			}
+
+
 		}
 
 		// Fragment shader is set by above function, to be able to decide out of different shaders
