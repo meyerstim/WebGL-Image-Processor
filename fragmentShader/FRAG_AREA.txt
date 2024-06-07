@@ -1,0 +1,26 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 resolution; // Canvas-size
+uniform vec2 bottomLeft; // Uniform-Variable for left bottom corner
+uniform vec2 topRight; // Uniform-Variable for right top corner
+void main() {
+    vec4 texColor = texture2D(texture, texCoords);
+    // Transformation of normalised texCoords in screen coordinates
+    vec2 screenCoords = texCoords * resolution;
+    // Check if pixel in selected area
+    if (screenCoords.x >= bottomLeft.x && screenCoords.x <= topRight.x &&
+        screenCoords.y >= bottomLeft.y && screenCoords.y <= topRight.y) {
+        // Pixel processing with desired algorithm
+        float brightness = max(max(texColor.r, texColor.g), texColor.b);
+        if (brightness >= 0.6) {
+            float redIntensity = (brightness - 0.6) / (1.0 - 0.6);
+            gl_FragColor = vec4(redIntensity, 0.0, 0.0, 1.0); // Red value
+        } else {
+            gl_FragColor = texColor; // Original value, of not above treshold
+        }
+    } else {
+        // No processing for individual pixel if out of selected area
+        gl_FragColor = texColor;
+    }
+}

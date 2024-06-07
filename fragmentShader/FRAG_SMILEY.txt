@@ -1,0 +1,33 @@
+precision mediump float;
+uniform vec2 resolution; // Canvas size
+void main() {
+    vec2 center = vec2(0.5, 0.5); // Center of Smiley in normalised coordinates
+    float radius = 0.4; // Radius Smiley
+    float eyeRadius = 0.05;
+    float mouthWidth = 0.05;
+    float smileRadius = 0.3;
+    // Transform Pixel-coordinates to normalised coordinates
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec2 uvCentered = uv - center;
+    // Calculation distance from center
+    float dist = length(uvCentered);
+    // Draw Face
+    vec3 color = vec3(0.0);
+    if (dist < radius) {
+        color = vec3(1.0, 1.0, 0.0); // face in yellow
+        // Eyes
+        vec2 leftEyePos = center + vec2(-0.15, 0.1);
+        vec2 rightEyePos = center + vec2(0.15, 0.1);
+        float leftEyeDist = length(uv - leftEyePos);
+        float rightEyeDist = length(uv - rightEyePos);
+        if (leftEyeDist < eyeRadius || rightEyeDist < eyeRadius) {
+            color = vec3(0.0);
+        }
+        // Mouth
+        float mouthDist = length(uvCentered + vec2(0.0, -0.15));
+        if (mouthDist < smileRadius + mouthWidth && mouthDist > smileRadius - mouthWidth && uv.y < center.y) {
+            color = vec3(1.0, 0.0, 0.0); // mouth in red
+        }
+    }
+    gl_FragColor = vec4(color, 1.0);
+}

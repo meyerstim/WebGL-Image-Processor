@@ -1,0 +1,11 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+void main() {
+    vec4 color = texture2D(texture, texCoords);
+    float contrast = 5.0; // Factor for Contrast strength
+    color.rgb /= color.a;
+    color.rgb = ((color.rgb - 0.5) * max(contrast, 0.0)) + 0.5;
+    color.rgb *= color.a;
+    gl_FragColor = color;
+}

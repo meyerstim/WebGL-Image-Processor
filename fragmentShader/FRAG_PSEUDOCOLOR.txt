@@ -1,0 +1,15 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+vec3 grayscaleToColor(float gray) {
+    float r = smoothstep(0.0, 0.5, gray) - smoothstep(0.5, 1.0, gray);
+    float g = smoothstep(0.25, 0.75, gray);
+    float b = 1.0 - smoothstep(0.0, 1.0, gray);
+    return vec3(r, g, b);
+}
+void main() {
+    vec4 color = texture2D(texture, texCoords);
+    float intensity = color.r;
+    vec3 pseudocolor = grayscaleToColor(intensity);
+    gl_FragColor = vec4(pseudocolor, color.a);
+}

@@ -1,0 +1,15 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    vec2 texOffset = 1.0 / texSize; // Gets size of single texel
+    vec4 result = vec4(0.0);
+    for(int x = -2; x <= 2; x++) {
+        for(int y = -2; y <= 2; y++) {
+            vec2 offset = vec2(float(x), float(y)) * texOffset;
+            result += texture2D(texture, texCoords + offset) * 0.04;
+        }
+    }
+    gl_FragColor = result;
+}

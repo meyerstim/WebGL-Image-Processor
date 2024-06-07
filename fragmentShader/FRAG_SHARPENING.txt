@@ -1,0 +1,16 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    float strength = 10.0; // Strength of sharpening effect
+    vec4 texColor = texture2D(texture, texCoords);
+    vec4 texColorLeft = texture2D(texture, texCoords + vec2(-dx, 0.0));
+    vec4 texColorRight = texture2D(texture, texCoords + vec2(dx, 0.0));
+    vec4 texColorUp = texture2D(texture, texCoords + vec2(0.0, dy));
+    vec4 texColorDown = texture2D(texture, texCoords + vec2(0.0, -dy));
+    vec4 edge = texColor * (1.0 + 4.0 * strength) - (texColorLeft + texColorRight + texColorUp + texColorDown) * strength;
+    gl_FragColor = vec4(edge.rgb, texColor.a);
+}

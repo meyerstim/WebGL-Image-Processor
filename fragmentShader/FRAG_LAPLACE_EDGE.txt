@@ -1,0 +1,22 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    vec3 color = vec3(0.0);
+    color += texture2D(texture, texCoords + vec2(-dx, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(0.0, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, -dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx, 0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, 0.0)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(-dx, dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(0.0, dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords + vec2(dx, dy)).rgb * -1.0;
+    color += texture2D(texture, texCoords).rgb * 8.0;
+
+    color = color * 2.0; // Adjust this factor to increase brightness and contrast
+
+    gl_FragColor = vec4(color, 1.0);
+}
