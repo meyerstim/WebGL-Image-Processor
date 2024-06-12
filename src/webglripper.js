@@ -355,40 +355,45 @@ async function startWebGLRipper() {
                     gl = canvases[_window.Settings.multipleCanvases].getContext(contextNames[_window.Settings.version]);
                     if (gl != null) {
                         break;
+                    }else {
+                        LogToParent("Found no supported WebGL context.")
+                        break;
                     }
-                    LogToParent("Found no supported WebGL context.")
                 }
-                // Error handling, if no (supported) WebGL context could be set up
-                try {
-                    if (!gl._hooked) {
-                        // Creates new Instance of WebGLWrapper for received context
-                        let glRipper = new WebGLWrapper(gl);
-                        glRipper._IsWebGL2 = (contextNames[_window.Settings.version] == 'webgl2');
-                        // Registers hooked functions in WebGL-Context.
-                        RegisterGLFunction(gl, glRipper, "viewport");
-                        RegisterGLFunction(gl, glRipper, "drawElements");
-                        RegisterGLFunction(gl, glRipper, "UniformMatrix4fv");
 
-                        // Method to update shader program when the dropdown selection changes
-                        updateShaderProgram = function () {
-                            glRipper.initializeShaderProgram();
-                        }
+                if(gl != null) {
+                    // Error handling, if no (supported) WebGL context could be set up
+                    try {
+                        if (!gl._hooked) {
+                            // Creates new Instance of WebGLWrapper for received context
+                            let glRipper = new WebGLWrapper(gl);
+                            glRipper._IsWebGL2 = (contextNames[_window.Settings.version] == 'webgl2');
+                            // Registers hooked functions in WebGL-Context.
+                            RegisterGLFunction(gl, glRipper, "viewport");
+                            RegisterGLFunction(gl, glRipper, "drawElements");
+                            RegisterGLFunction(gl, glRipper, "UniformMatrix4fv");
 
-                        // Sets processing coordinates to full context size as standard, if no other value is set
-                        // TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
-                        if (_window.Settings.coordinatesLeftBottom[0] === 0.0 && _window.Settings.coordinatesLeftBottom[1] === 0.0) {
-                            _window.Settings.coordinatesLeftBottom = [0.0, 0.0];
-                        }
-                        if (_window.Settings.coordinatesRightTop[0] === 0.0 && _window.Settings.coordinatesRightTop[1] === 0.0) {
-                            _window.Settings.coordinatesRightTop = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-                        }
+                            // Method to update shader program when the dropdown selection changes
+                            updateShaderProgram = function () {
+                                glRipper.initializeShaderProgram();
+                            }
 
-                        _window.RIPPERS.push(glRipper);
-                        gl._hooked = true;
-                        LogToParent(`Injected into ` + contextNames[_window.Settings.version] + ` context of Canvas ` + (_window.Settings.multipleCanvases + 1));
+                            // Sets processing coordinates to full context size as standard, if no other value is set
+                            // TODO Set coordinates for area of processing here, future integration of boxcraft for manual selection by user on canvas
+                            if (_window.Settings.coordinatesLeftBottom[0] === 0.0 && _window.Settings.coordinatesLeftBottom[1] === 0.0) {
+                                _window.Settings.coordinatesLeftBottom = [0.0, 0.0];
+                            }
+                            if (_window.Settings.coordinatesRightTop[0] === 0.0 && _window.Settings.coordinatesRightTop[1] === 0.0) {
+                                _window.Settings.coordinatesRightTop = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+                            }
+
+                            _window.RIPPERS.push(glRipper);
+                            gl._hooked = true;
+                            LogToParent(`Injected into ` + contextNames[_window.Settings.version] + ` context of Canvas ` + (_window.Settings.multipleCanvases + 1));
+                        }
+                    } catch (error) {
+                        LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
                     }
-                } catch (error) {
-                    LogToParent("As no supported WebGL context was found, WebGLWrapper could not be setup and functions can't be hooked.\n For further information regard following error message: \n" + error)
                 }
             }
         } else {
