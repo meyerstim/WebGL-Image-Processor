@@ -1,4 +1,4 @@
-# WebGLRipper
+# WebGL Image Processor
 A tool used to perform live image processing on WebGL contents.
 
 # How to use?

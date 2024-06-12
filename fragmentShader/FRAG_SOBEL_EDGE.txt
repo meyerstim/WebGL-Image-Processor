@@ -1,0 +1,32 @@
+precision mediump float;
+varying vec2 texCoords;
+uniform sampler2D texture;
+uniform vec2 texSize;
+void main() {
+    float dx = 1.0 / texSize.x;
+    float dy = 1.0 / texSize.y;
+    vec3 grad_x = vec3(0.0);
+    vec3 grad_y = vec3(0.0);
+    vec3 texTL = texture2D(texture, texCoords + vec2(-dx, -dy)).rgb; // Top-left
+    vec3 texTC = texture2D(texture, texCoords + vec2(0.0, -dy)).rgb; // Top-center
+    vec3 texTR = texture2D(texture, texCoords + vec2(dx, -dy)).rgb;  // Top-right
+    vec3 texCL = texture2D(texture, texCoords + vec2(-dx, 0.0)).rgb; // Center-left
+    vec3 texCC = texture2D(texture, texCoords).rgb;                  // Center-center
+    vec3 texCR = texture2D(texture, texCoords + vec2(dx, 0.0)).rgb;  // Center-right
+    vec3 texBL = texture2D(texture, texCoords + vec2(-dx, dy)).rgb;  // Bottom-left
+    vec3 texBC = texture2D(texture, texCoords + vec2(0.0, dy)).rgb;  // Bottom-center
+    vec3 texBR = texture2D(texture, texCoords + vec2(dx, dy)).rgb;   // Bottom-right
+
+    // Apply Sobel operator for X gradient
+    grad_x += texTL * vec3(-1.0) + texTC * vec3(0.0) + texTR * vec3(1.0);
+    grad_x += texCL * vec3(-2.0) + texCC * vec3(0.0) + texCR * vec3(2.0);
+    grad_x += texBL * vec3(-1.0) + texBC * vec3(0.0) + texBR * vec3(1.0);
+
+    // Apply Sobel operator for Y gradient
+    grad_y += texTL * vec3(-1.0) + texTC * vec3(-2.0) + texTR * vec3(-1.0);
+    grad_y += texCL * vec3(0.0) + texCC * vec3(0.0) + texCR * vec3(0.0);
+    grad_y += texBL * vec3(1.0) + texBC * vec3(2.0) + texBR * vec3(1.0);
+
+    float edgeStrength = length(grad_x) + length(grad_y);
+    gl_FragColor = vec4(vec3(edgeStrength), 1.0);
+}

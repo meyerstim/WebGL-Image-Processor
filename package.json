@@ -1,0 +1,27 @@
+{
+  "name": "webglripper_npm-test",
+  "version": "1.0.0",
+  "description": "A tool used to perform live image processing on WebGL contents.",
+  "main": "dist/webglripper.min.js",
+  "scripts": {
+    "dev": "npx live-server --port=5501 --no-browser",
+    "prebuild": "node src/generateShaders.js",
+    "build": "parcel build src/webglripper.js --dist-dir dist --public-url ./ --no-source-maps",
+    "start": "parcel serve src/webglripper.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@parcel/transformer-inline-string": "^2.1.0",
+    "parcel": "^2.12.0",
+    "parcel-plugin-static-files-copy": "^2.6.0"
+  },
+  "staticFiles": {
+    "staticPath": "fragmentShader",
+    "staticOutPath": "fragmentShader"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  }
+}
