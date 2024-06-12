@@ -4,6 +4,8 @@ async function startWebGLRipper() {
     let _window = window;
     let gl;
     let contextNames = ["webgl2", "webgl", "experimental-webgl"];
+    let xValue = 1.0; //Vertex-Transformation Factor
+    let yValue = 1.0; //Vertex-Transformation Factor
 
 
     // Add the popup with a dropdown menu to the HTML document
@@ -18,22 +20,73 @@ async function startWebGLRipper() {
         popup.style.fontWeight = 'bold';
         popup.style.zIndex = '10000'; // Ensures the dropdown is above other elements
         popup.style.pointerEvents = 'auto'; // Ensures the dropdown is interactable
+        popup.style.width = '220px'; // Set a fixed width to ensure consistency
+        popup.style.opacity = '0.95'; // Make the entire popup 50% transparent
+        popup.style.color = 'black'; // Ensures all text inside the popup is black
         let shaderOptions = Object.keys(shaders).map(shader => `<option value="${shader}">${shader}</option>`).join('');
         popup.innerHTML = `
-      <label for="shaderSelector">Select Fragment Shader:</label></br>
-      <select id="shaderSelector">
-        ${shaderOptions}
-      </select>
-    `;
+
+        <label for="shaderSelector">Select Fragment Shader:</label></br>
+        <select id="shaderSelector" style="height: 40px; width: 200px;">
+            ${shaderOptions}
+        </select></br></br>
+    
+        <label for="Vertex scaling">Vertex scaling (0.0 - 1.0):</label></br>
+        <div style="display: flex; justify-content: space-between; width: 200px;">
+            <label for="xValue">X-Direction</label>
+            <label for="yValue">Y-Direction</label>
+        </div>
+        <div style="display: flex; justify-content: space-between; width: 200px;">
+            <input type="number" id="xValue" min="0.0" max="1.0" step="0.05" value="1.0" style="width: 90px; height: 40px;"></br>
+            <input type="number" id="yValue" min="0.0" max="1.0" step="0.05" value="1.0" style="width: 90px; height: 40px;">
+        </div>
+        <div id="header" style="cursor: move; background-color: #f1f1f1; height: 10px; margin-top: 10px;"></div>
+        `;
         document.body.appendChild(popup);
 
+        // Draggable functionality
+        let header = document.getElementById('header');
+        let offsetX, offsetY, isDragging = false;
+        header.addEventListener('mousedown', function (e) {
+            isDragging = true;
+            offsetX = e.clientX - popup.offsetLeft;
+            offsetY = e.clientY - popup.offsetTop;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+        function onMouseMove(e) {
+            if (isDragging) {
+                popup.style.left = (e.clientX - offsetX) + 'px';
+                popup.style.top = (e.clientY - offsetY) + 'px';
+            }
+        }
+        function onMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        //Evaluation of inputs for every change
         let shaderSelector = document.getElementById('shaderSelector');
         shaderSelector.addEventListener('change', function () {
             _window.Settings.globalFragmentShaderSetting = shaderSelector.value;
             updateShaderProgram();
         });
-    }
 
+        document.getElementById('xValue').addEventListener('change', function () {
+            xValue = parseFloat(document.getElementById('xValue').value);
+            if (isNaN(xValue) || xValue < 0.0 || xValue > 1.0) {
+                alert('Enter a valid value between 0.0 and 1.0 for scaling in X direction.');
+            }
+        });
+
+        document.getElementById('yValue').addEventListener('change', function () {
+            yValue = parseFloat(document.getElementById('yValue').value);
+            if (isNaN(yValue) || yValue < 0.0 || yValue > 1.0) {
+                alert('Enter a valid value between 0.0 and 1.0 for scaling in Y direction.');
+            }
+        });
+    }
 
     function chooseShaderOption(globalFragmentShaderSetting) {
         return shaders[globalFragmentShaderSetting];
@@ -50,7 +103,7 @@ async function startWebGLRipper() {
         // TODO Boxcraft oder ähnliches integrieren, um Koordinaten abzurufen. Und diese dann setzen, für Verarbeitung im Fragment shader
         coordinatesLeftBottom: [150.0, 110.0], // Standard with 0.0 is set to full canvas
         coordinatesRightTop: [280.0, 260.0], // Standard with 0.0 is set to full canvas
-        globalFragmentShaderSetting: 'STANDARD' // Setting for different fragment shaders (Options: FRAG_SMILEY, FRAG_AREA, NULL->Standard)
+        globalFragmentShaderSetting: 'ORIGINAL' // Setting for different fragment shaders (Options: FRAG_SMILEY, FRAG_AREA, NULL->Standard)
     };
 
     // Function to log messages to the console if debugging is enabled.
@@ -88,11 +141,13 @@ async function startWebGLRipper() {
         _GLContext = null;
         _isCapturing = false;
         imageProcessingProgram = null;
+        originalUniformMatrix4fv = null;
 
         // Constructor initializes the wrapper with a WebGL context
         constructor(gl) {
             this._GLContext = gl;
             this.initializeShaderProgram();
+            this.hookUniformMatrix4fv();
         }
 
         // Method to create and compile a shader
@@ -138,6 +193,42 @@ async function startWebGLRipper() {
             const fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
             this.imageProcessingProgram = this.createProgram(gl, vertexShader, fragmentShader);
         }
+
+        // Overwrites the uniformMatrix4fv method to apply a scaling transformation on matrices
+        hookUniformMatrix4fv() {
+            const gl = this._GLContext;
+            const originalUniformMatrix4fv = gl.uniformMatrix4fv;
+            gl.uniformMatrix4fv = (location, transpose, value) => {
+                if (location && this._isCapturing) {
+                    if (value && value.length === 16) {
+                        let scaleMatrix = new Float32Array([
+                            xValue, 0, 0, 0,
+                            0, yValue, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1
+                        ]);
+
+                        value = this.multiplyMatrices(value, scaleMatrix);
+                    }
+                }
+                originalUniformMatrix4fv.call(gl, location, transpose, value);
+            };
+        }
+
+        // Multiplies two 4x4 matrices and returns the resulting matrix
+        multiplyMatrices(a, b) {
+            let result = new Float32Array(16);
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    result[i * 4 + j] = 0;
+                    for (let k = 0; k < 4; k++) {
+                        result[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
+                    }
+                }
+            }
+            return result;
+        }
+
 
         // Handle viewport changes and apply the image processing shader (resolution conversion)
         hooked_viewport(self, gl, args, oFunc) {
@@ -276,6 +367,7 @@ async function startWebGLRipper() {
                         // Registers hooked functions in WebGL-Context.
                         RegisterGLFunction(gl, glRipper, "viewport");
                         RegisterGLFunction(gl, glRipper, "drawElements");
+                        RegisterGLFunction(gl, glRipper, "UniformMatrix4fv");
 
                         // Method to update shader program when the dropdown selection changes
                         updateShaderProgram = function () {

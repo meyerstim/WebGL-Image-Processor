@@ -11,7 +11,7 @@ let shaderFiles = fs.readdirSync(shadersDir)
     .filter(file => file.match(/FRAG_(\w+)\.txt$/));
 
 // Checks if FRAG_STANDARD is present
-const standardIndex = shaderFiles.indexOf('FRAG_STANDARD.txt');
+const standardIndex = shaderFiles.indexOf('FRAG_ORIGINAL.txt');
 if (standardIndex !== -1) {
     // Place FRAG_STANDARD at top of list
     const standardFile = shaderFiles.splice(standardIndex, 1)[0];

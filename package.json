@@ -20,5 +20,8 @@
   "staticFiles": {
     "staticPath": "fragmentShader",
     "staticOutPath": "fragmentShader"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
   }
 }
