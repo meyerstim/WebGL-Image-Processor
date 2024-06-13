@@ -90,15 +90,21 @@
         }
 
         .websites img {
-            width: 300px;
+            width: 620px;
         }
 
         .image-container {
-
             position: relative;
             margin: 10px;
             width: 300px;
             float:left;
+        }
+
+        .image-container_wide {
+            position: relative;
+            margin: 10px;
+            width: 620px;
+            float: left;
         }
 
         .overlay {
@@ -117,12 +123,37 @@
             margin: 5px;
         }
 
+        .overlay_wide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 590px;
+            height: 250px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            /*        transition: opacity 0.3s;*/
+            z-index: 1000;
+            margin: 5px;
+        }
+
         .image-container:hover .overlay {
             /*        transition: opacity 0.3s;*/
             opacity: 1;
         }
 
         .image-container:hover img {
+            opacity: 0.5;
+        }
+
+        .image-container_wide:hover .overlay {
+            /*        transition: opacity 0.3s;*/
+            opacity: 1;
+        }
+
+        .image-container_wide:hover img {
             opacity: 0.5;
         }
 
@@ -255,52 +286,33 @@
         </br>
 
 
-        <h3>See for different examples of image processing performed with the WebGL Image Processor:</h3>
+        <h3>See for different examples of image processing and vertex transformation performed with the WebGL Image Processor:</h3>
         <video width="320" height="240" controls>
             <source src="gfx/DemoVideo_WebGL.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div class="websites">
+
+
+            <div class="image-container">
+                    <img src="gfx/SOBEL_AND_VERTEX.png" alt="AREA Selection">
+                    <div class='overlay'>
+                        <span class='sitename'>SOBEL Edge Detection and Vertex Transformation</span>
+                        <span class='tech'>Splitscreen with original and processed content. SOBEL Edge detection and transformation in Y-Direction by Factor 0.5</span>
+                        </br>
+                        <span class='source'>Source: https://threejs.org/examples/webgl_framebuffer_texture.html</span>
+                    </div>
+            </div>
             <div class="image-container">
                 <!--<a href="https://viewer.imaging.datacommons.cancer.gov/viewer/1.3.6.1.4.1.14519.5.2.1.6279.6001.224985459390356936417021464571?seriesInstanceUID=1.2.276.0.7230010.3.1.3.0.57823.1553343864.578877,1.3.6.1.4.1.14519.5.2.1.6279.6001.273525289046256012743471155680" target="_blank">-->
-                    <img src="gfx/process_Standard.png" alt="FULL">
-                    <div class='overlay'>
-                        <span class='sitename'>FULL</span>
-                        <span class='tech'>Processing is performed for full canvas</span>
-                        </br>
-                        <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
-                    </div>
+                <img src="gfx/HIGHLIGHTING_AND_VERTEX.png" alt="FULL">
+                <div class='overlay'>
+                    <span class='sitename'>HIGHLIGHTING and Vertex Transformation</span>
+                    <span class='tech'>Splitscreen with processed and original content. HIGHLIGHTING and transformation in Y-Direction by Factor 0.25</span>
+                    </br>
+                    <span class='source'>Source: https://threejs.org/examples/webgl_lightprobe.html</span>
+                </div>
                 <!--</a>-->
-            </div>
-
-            <div class="image-container">
-                    <img src="gfx/process_Area-selection.png" alt="AREA Selection">
-                    <div class='overlay'>
-                        <span class='sitename'>AREA Selection</span>
-                        <span class='tech'>Processing is only performed for desired area</span>
-                        </br>
-                        <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
-                    </div>
-            </div>
-
-            <div class="image-container">
-                <img src="gfx/Sobel_Filter.png" alt="SOBEL Edge Detection">
-                <div class='overlay'>
-                    <span class='sitename'>SOBEL Edge Detection</span>
-                    <span class='tech'>Edge detection filter with 3x3 kernel</span>
-                    </br>
-                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
-                </div>
-            </div>
-
-            <div class="image-container">
-                <img src="gfx/Laplace_Filter.png" alt="LAPLACE Edge Detection">
-                <div class='overlay'>
-                    <span class='sitename'>LAPLACE Edge Detection</span>
-                    <span class='tech'>Edge detection filter with laplace calculation</span>
-                    </br>
-                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
-                </div>
             </div>
 
             <div class="image-container">
@@ -313,6 +325,31 @@
                 </div>
             </div>
 
+
+            <div class="image-container">
+                <img src="gfx/Laplace_Filter.png" alt="LAPLACE Edge Detection">
+                <div class='overlay'>
+                    <span class='sitename'>LAPLACE Edge Detection</span>
+                    <span class='tech'>Edge detection filter with laplace calculation</span>
+                    </br>
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+            </div>
+
+
+
+            <div class="image-container">
+
+                <img src="gfx/process_Area-selection.png" alt="AREA">
+                <div class='overlay'>
+                    <span class='sitename'>AREA</span>
+                    <span class='tech'>Processing performed only for Region of Interest (ROI) selection</span>
+
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+
+            </div>
+
             <div class="image-container">
                  <img src="gfx/process_Smiley.png" alt="SMILEY">
                     <div class='overlay'>
@@ -321,21 +358,32 @@
                     </div>
             </div>
 
+
+            <div class="image-container_wide">
+                <img src="gfx/Pseudocolor_Filter_Brainchop.png" alt="PSEUDOCOLOR">
+                <div class='overlay_wide'>
+                    <span class='sitename'>INVERTER</span>
+                    <span class='tech'>Color of pixel getting inverted.</span>
+                    </br>
+                    <span class='source'>Source: https://openneuro.org/datasets/ds004697/versions/1.0.1/file-display/sub-003:ses-1:anat:sub-003_ses-1_T1w.nii.gz</span>
+                </div>
+            </div>
+
         </div>
         <br><br>
         <div id='faq'>
             <h1>F.A.Q.</h1>
             <ol>
                 <li class="question" onclick="toggleAnswer(1)">What can be done with this tool?</li>
-                <li class="answer" id="answer1">Perform real-time image processing on existing WebGL content. You can use the tool on websites whereever WebGL is used as visualization framework. To perform different processing algorithms existing fragment shaders can be used or new ones can be added.</li>
+                <li class="answer" id="answer1">Perform real-time image processing and vertex transformation on existing WebGL contents of other websites without access to their server infrastrucutre or data. You can use the tool on websites whereever WebGL is used as visualization framework. To perform different processing algorithms existing fragment shaders can be used or new ones can be added.</li>
                 <li class="question" onclick="toggleAnswer(2)">How to use the tool?</li>
-                <li class="answer" id="answer2">Drag the above available bookmarklet to your browsers bookmark list. When on a compatible site, click the bookmarklet and the neccessary JavaScript gets automatically injected. To start processing now press your <i>Insert</i> key. To disable processing at anytime press the same key again. </li>
+                <li class="answer" id="answer2">Drag the above available bookmarklet to your browsers bookmark list. When on a compatible site, click the bookmarklet and the neccessary JavaScript gets automatically injected. A User Interface will show up, to choose between different settings and shaders. To start processing now press your <i>Insert</i> key. To disable processing at anytime press the same key again. </li>
                 <li class="question" onclick="toggleAnswer(3)">Which types of processing can be done?</li>
-                <li class="answer" id="answer3">Currently ready to use: Dynamic color highlighting, Area selection processing, Sobel Edge Detection, Laplace Edge Detection, Color Inverter, Gaussian Blur, Full content replacement</li>
+                <li class="answer" id="answer3">Image processing / Shaders: Dynamic color highlighting, Area selection processing, Sobel Edge Detection, Laplace Edge Detection, Color Inverter, Gaussian Blur, Full content replacement, Contrast enhancement, Sharpening, Pseudocoloring of grayscale images </br> Vertex Transformation: Scaling of the existing content in X and Y direction.</li>
                 <li class="question" onclick="toggleAnswer(4)">How can I develop my own processing algorithms?</li>
-                <li class="answer" id="answer4">Program a new fragment shader, according to the existing ones. Set it by the value <i>globalFragmentShaderSetting: 'FRAG_SOBEL'</i> and replace FRAG_SOBEL with your shaders name.</li>
-                <li class="question" onclick="toggleAnswer(5)">How is the backend working?</li>
-                <li class="answer" id="answer5">XYZ</li>
+                <li class="answer" id="answer4">Program a new fragment shader, according to the existing ones. Add it into the directory "fragmentShader" and run npm to compile the program again. As soon as the new and custom version is deployed, your shader will show up in the list of available.</li>
+                <li class="question" onclick="toggleAnswer(5)">Can I contribute to the framework?</li>
+                <li class="answer" id="answer5">Yes, your're welcome to. Whether it is a new shader / processing algorithm or some work onto the backend, just let us know by submitting a pull request on the linked GitHub Repository.</li>
             </ol>
         </div>
     </div>
