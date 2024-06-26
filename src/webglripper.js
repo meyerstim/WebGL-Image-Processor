@@ -357,6 +357,9 @@ async function startWebGLRipper() {
                         break;
                     }else {
                         LogToParent("Found no supported WebGL context.")
+                        if (version === contextNames.length-1) {
+                            break;
+                        }
                     }
                 }
 
