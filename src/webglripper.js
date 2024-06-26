@@ -109,7 +109,7 @@ async function startWebGLRipper() {
     // Function to log messages to the console if debugging is enabled.
     let LogToParent = function () {
         if (!_window.Settings.isDebug) return;
-        _window.console.log('[WebGLRipper]', ...arguments);
+        _window.console.log('[WebGL-Image-Processor]', ...arguments);
     };
 
     _window.RIPPERS = [];

@@ -239,7 +239,7 @@
         }
 
         // FROM https://caiorss.github.io/bookmarklet-maker/
-        function compile_boostlet (code){
+        function compile_bookmarklet (code){
             var output = "javascript:" +  encodeURIComponent("(function(){" + code.trim() +  "})();");
             return output;
         }
@@ -248,7 +248,7 @@
         function setup_processor_button(id, url) {
             var link = document.getElementById(id);
             load_processor(url, function(code) {
-                output = compile_boostlet(code);
+                output = compile_bookmarklet(code);
                 link.href = output;
             });
         }
